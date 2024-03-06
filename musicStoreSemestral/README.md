@@ -1,0 +1,24 @@
+# Data bases semestral work 
+
+## Team
+    - Matvej Safrankov (saframa9)
+
+## Theme
+    - music store (like a company)
+
+    ### Quick description
+        - Theme was chosen based on my connections and knowledge in music industry
+        - Whole work should include: 
+            - Online store
+                - Admins
+                - Registered Customers 
+            - Offline store
+                - Workers
+                - Managers
+            - Instruments catalogue
+                - String instruments
+                - Drums
+                - PA systems
+                - Accessories
+
+            
