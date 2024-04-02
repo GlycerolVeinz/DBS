@@ -17,9 +17,9 @@
         <li> PrivateInfo (<u>fullName, address, user, phoneNumber</u>, password)
             <ul>
                 <li>FK: (user) ⊆ User(nickname)</li>
-                <li> address (<u>privateInfo</u>, street, city, zip)
+                <li> Address (<u>phoneNumber</u>, street, city, zip)
                     <ul>
-                        <li>FK: (privateInfo) ⊆ PrivateInfo(phoneNumber)</li>
+                        <li>FK: Address(privateInfo) ⊆ PrivateInfo(phoneNumber)</li>
                     </ul>
                 </li>
             </ul>
@@ -27,9 +27,17 @@
     </ul>
 
     <ul>
-        <li> WorkerUser (<u>personalIdentificationNumber</u>, <u>nickname, email</u>)
+        <li> WorkerUser (<u>personalIdentificationNumber</u>, <u>nickname, email</u>, location)
             <ul>
-                <li>FK: (nickname, email) ⊆ User(nickname, email)</li>
+                <li>FK: WorkerUser(nickname, email) ⊆ User(nickname, email)</li>
+                <li>FK: WorkerUser(location) ⊆ Store(location)</li>
+            </ul>
+        </li>
+
+        <li> superiority (<u>isSuperior, isUnderling</u>)
+            <ul>
+                <li>FK: superiority(isSuperior) ⊆ WorkerUser(personalIdentificationNumber)</li>
+                <li>FK: superiority(isUnderling) ⊆ WorkerUser(personalIdentificationNumber)</li>
             </ul>
         </li>
     </ul>
@@ -40,6 +48,13 @@
                 <li>FK: (nickname, email) ⊆ User(nickname, email)</li>
             </ul>
         </li>
+
+        <li> buys (<u>ISBN</u>, <u>nickname, email</u>)
+            <ul>
+                <li>FK: buys(ISBN) ⊆ Product(ISBN)</li>
+                <li>FK: buys(nickname, email) ⊆ CustomerUser(nickname, email)</li>
+            </ul>
+        </li>
     </ul>
 
     <ul>
@@ -47,26 +62,37 @@
     </ul>
 
     <ul>
-        <li> Product (<u>ISBN</u>, <u>modelNumber</u>, manufacturer)</li>
+        <li> Product (<u>ISBN</u>, <u>modelNumber</u>, manufacturer, location)
+            <ul>
+                <li>FK: Product(location) ⊆ Store(location)</li>
+            </ul>
+        </li>
     </ul>
 
    <ul>
        <li> InstrumentProduct (<u>ISBN</u>, <u>modelNumber</u>, range, type, pickupType)
               <ul>
-                  <li>pickupType(<u>instrumentProduct</u>)
+                  <li>pickupType(<u>ISBN</u>)
                       <ul>
-                          <li>FK: (instrumentProduct) ⊆ InstrumentProduct(ISBN)</li>
+                          <li>FK: pickupType(ISBN) ⊆ InstrumentProduct(ISBN)</li>
                       </ul>
                   </li>
-                  <li>FK: (ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
+                  <li>FK: InstrumentProduct(ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
               </ul>
+       </li>
+
+       <li> includes(<u>ISBN</u>, <u>modelNumber</u>)
+           <ul>
+                <li>FK: includes(modelNumber) ⊆ InstrumentProduct(modelNumber)</li>
+                <li>FK: includes(ISBN) ⊆ Acessory(ISBN)</li>
+           </ul>
        </li>
    </ul>
 
     <ul>
         <li> PASystemProduct (<u>ISBN</u>, <u>modelNumber</u>, range, type, power)
             <ul>
-                <li>FK: (ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
+                <li>FK: PASystemProduct(ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
             </ul>
         </li>
     </ul>
@@ -74,5 +100,6 @@
     <ul>
         <li> Acessory (<u>ISBN</u>, type)</li>
     </ul>
+
 </body>
 </html>
