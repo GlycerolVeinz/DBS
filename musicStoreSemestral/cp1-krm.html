@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RM for DBS</title>
+</head>
+
+<body>
+
+    <h1>Relational model for musicstore database</h1>
+
+    <ul>
+        <li> User (<u>nickname, email</u>)</li>
+    </ul>
+
+    <ul>
+        <li> PrivateInfo (<u>fullName, address, user, phoneNumber</u>, password)
+            <ul>
+                <li>FK: (user) ⊆ User(nickname)</li>
+                <li> address (<u>privateInfo</u>, street, city, zip)
+                    <ul>
+                        <li>FK: (privateInfo) ⊆ PrivateInfo(phoneNumber)</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <ul>
+        <li> WorkerUser (<u>personalIdentificationNumber</u>, <u>nickname, email</u>)
+            <ul>
+                <li>FK: (nickname, email) ⊆ User(nickname, email)</li>
+            </ul>
+        </li>
+    </ul>
+
+    <ul>
+        <li> CustomerUser (<u>nickname, email</u>, cookies, premiumStatus)
+            <ul>
+                <li>FK: (nickname, email) ⊆ User(nickname, email)</li>
+            </ul>
+        </li>
+    </ul>
+
+    <ul>
+        <li> Store (<u>location</u>)</li>
+    </ul>
+
+    <ul>
+        <li> Product (<u>ISBN</u>, <u>modelNumber</u>, manufacturer)</li>
+    </ul>
+
+   <ul>
+       <li> InstrumentProduct (<u>ISBN</u>, <u>modelNumber</u>, range, type, pickupType)
+              <ul>
+                  <li>pickupType(<u>instrumentProduct</u>)
+                      <ul>
+                          <li>FK: (instrumentProduct) ⊆ InstrumentProduct(ISBN)</li>
+                      </ul>
+                  </li>
+                  <li>FK: (ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
+              </ul>
+       </li>
+   </ul>
+
+    <ul>
+        <li> PASystemProduct (<u>ISBN</u>, <u>modelNumber</u>, range, type, power)
+            <ul>
+                <li>FK: (ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
+            </ul>
+        </li>
+    </ul>
+
+    <ul>
+        <li> Acessory (<u>ISBN</u>, type)</li>
+    </ul>
+</body>
+</html>
