@@ -14,14 +14,9 @@
     </ul>
 
     <ul>
-        <li> PrivateInfo (<u>fullName, address, user, phoneNumber</u>, password)
+        <li> PrivateInfo (<u>fullName, street, city, zip, user, phoneNumber</u>, password)
             <ul>
                 <li>FK: (user) ⊆ User(nickname)</li>
-                <li> Address (<u>phoneNumber</u>, street, city, zip)
-                    <ul>
-                        <li>FK: Address(privateInfo) ⊆ PrivateInfo(phoneNumber)</li>
-                    </ul>
-                </li>
             </ul>
         </li>
     </ul>
@@ -70,7 +65,7 @@
     </ul>
 
    <ul>
-       <li> InstrumentProduct (<u>ISBN</u>, <u>modelNumber</u>, range, type, pickupType)
+       <li> InstrumentProduct (<u>modelNumber</u>, range, type, pickupType)
               <ul>
                   <li>pickupType(<u>ISBN</u>)
                       <ul>
@@ -90,7 +85,7 @@
    </ul>
 
     <ul>
-        <li> PASystemProduct (<u>ISBN</u>, <u>modelNumber</u>, range, type, power)
+        <li> PASystemProduct (<u>ISBN</u>, range, type, power)
             <ul>
                 <li>FK: PASystemProduct(ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
             </ul>

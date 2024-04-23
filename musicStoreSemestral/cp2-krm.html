@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RM for DBS</title>
+</head>
+
+<body>
+
+<h1>Relational model for music store database</h1>
+
+<ul>
+    <li> User (<u>userID</u>, <u>nickname, email</u>)</li>
+</ul>
+
+<ul>
+    <li> PrivateInfo (<u>fullName, street, city, zip, userNickname, userMail, phoneNumber</u>, password)
+        <ul>
+            <li>FK: (userNickname, userMail) ⊆ User(nickname, email)</li>
+        </ul>
+    </li>
+</ul>
+
+<ul>
+    <li> WorkerUser (<u>workerId</u>, <u>personalIdentificationNumber</u>, <u>nickname, email</u>, location)
+        <ul>
+            <li>FK: WorkerUser(nickname, email) ⊆ User(nickname, email)</li>
+            <li>FK: WorkerUser(location) ⊆ Store(location)</li>
+        </ul>
+    </li>
+
+    <li> superiority (<u>isSuperior, isUnderling</u>)
+        <ul>
+            <li>FK: superiority(isSuperior) ⊆ WorkerUser(personalIdentificationNumber)</li>
+            <li>FK: superiority(isUnderling) ⊆ WorkerUser(personalIdentificationNumber)</li>
+        </ul>
+    </li>
+</ul>
+
+<ul>
+    <li> CustomerUser (<u>customerID</u>, <u>nickname, email</u>, cookies, premiumStatus)
+        <ul>
+            <li>FK: (nickname, email) ⊆ User(nickname, email)</li>
+        </ul>
+    </li>
+
+    <li> buys (<u>ISBN</u>, <u>nickname, email</u>)
+        <ul>
+            <li>FK: buys(ISBN) ⊆ Product(ISBN)</li>
+            <li>FK: buys(nickname, email) ⊆ CustomerUser(nickname, email)</li>
+        </ul>
+    </li>
+</ul>
+
+<ul>
+    <li> Store (<u>storeId</u>, <u>location</u>)</li>
+</ul>
+
+<ul>
+    <li> Product (<u>productID</u>, <u>ISBN</u>, <u>modelNumber</u>, manufacturer, location)
+        <ul>
+            <li>FK: Product(location) ⊆ Store(location)</li>
+        </ul>
+    </li>
+</ul>
+
+<ul>
+    <li> InstrumentProduct (<u>instrumentId</u>, <u>modelNumber</u>, range, type, pickupType)
+        <ul>
+            <li>pickupType(<u>pickupId</u>, <u>modelNumber</u>, name)
+                <ul>
+                    <li>FK: pickupType(modelNumber) ⊆ InstrumentProduct(modelNumber)</li>
+                </ul>
+            </li>
+            <li>FK: InstrumentProduct(ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
+        </ul>
+    </li>
+
+    <li> includes(<u>ISBN</u>, <u>modelNumber</u>)
+        <ul>
+            <li>FK: includes(modelNumber) ⊆ InstrumentProduct(modelNumber)</li>
+            <li>FK: includes(ISBN) ⊆ Accessory(ISBN)</li>
+        </ul>
+    </li>
+</ul>
+
+<ul>
+    <li> PASystemProduct (<u>systemId</u>, <u>ISBN</u>, range, type, resistance)
+        <ul>
+            <li>FK: PASystemProduct(ISBN) ⊆ Product(ISBN)</li>
+        </ul>
+    </li>
+</ul>
+
+<ul>
+    <li> Accessory (<u>accessoryId</u>, <u>ISBN</u>, type)</li>
+</ul>
+
+</body>
+</html>
