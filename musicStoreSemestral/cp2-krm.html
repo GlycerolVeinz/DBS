@@ -14,7 +14,7 @@
 </ul>
 
 <ul>
-    <li> PrivateInfo (<u>fullName, street, city, zip, userNickname, userMail, phoneNumber</u>, password)
+    <li> PrivateInfo (<u>fullName, homeNumber, street, city, zip, userNickname, userMail, phoneNumber</u>, password)
         <ul>
             <li>FK: (userNickname, userMail) ⊆ User(nickname, email)</li>
         </ul>
@@ -67,7 +67,7 @@
 <ul>
     <li> InstrumentProduct (<u>instrumentId</u>, <u>modelNumber</u>, range, type, pickupType)
         <ul>
-            <li>pickupType(<u>pickupId</u>, <u>modelNumber</u>, name)
+            <li>pickupType(<u>pickupId</u>, <u>modelNumber</u>, <u>pickupModelNumber</u>, name)
                 <ul>
                     <li>FK: pickupType(modelNumber) ⊆ InstrumentProduct(modelNumber)</li>
                 </ul>

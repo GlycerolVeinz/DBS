@@ -66,7 +66,7 @@ erDiagram
     It's like logic in math all over again.
     You will be looking for relations.
 
-## Lab 06
+## Lab 06 + 07 + 08
 
 ### SQL 
 
@@ -208,5 +208,8 @@ erDiagram
     DROP TABLE book;
     DROP TABLE genre;
 ```
-    
+
+## Lab 09
+
+
 
