@@ -29,7 +29,7 @@
         </ul>
     </li>
 
-    <li> superiority (<u>isSuperior, isUnderling</u>)
+    <li> superiority (<u>superiorityId</u>, superiorId, underlingId,<u>isSuperior, isUnderling</u>)
         <ul>
             <li>FK: superiority(isSuperior) ⊆ WorkerUser(personalIdentificationNumber)</li>
             <li>FK: superiority(isUnderling) ⊆ WorkerUser(personalIdentificationNumber)</li>
@@ -67,12 +67,18 @@
 <ul>
     <li> InstrumentProduct (<u>instrumentId</u>, <u>modelNumber</u>, range, type, pickupType)
         <ul>
-            <li>pickupType(<u>pickupId</u>, <u>modelNumber</u>, <u>pickupModelNumber</u>, name)
-                <ul>
-                    <li>FK: pickupType(modelNumber) ⊆ InstrumentProduct(modelNumber)</li>
-                </ul>
-            </li>
             <li>FK: InstrumentProduct(ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
+        </ul>
+    </li>
+
+    <li>PickupType(<u>pickupId</u>, <u>modelNumber</u>, name)</li>
+
+    <li> InstrumentPickup (<u>installedOnId</u>, instrumentId, pickupID, modelNumber, pickupModelNumber)
+        <ul>
+            <li>FK: InstrumentPickup(modelNumber) ⊆ InstrumentProduct(modelNumber)</li>
+            <li>FK: InstrumentPickup(pickupModelNumber) ⊆ Pickup(modelNumber)</li>
+            <li>FK: InstrumentPickup(instrumentId) ⊆ InstrumentProduct(instrumentId)</li>
+            <li>FK: InstrumentPickup(pickupID) ⊆ Pickup(pickupID)</li>
         </ul>
     </li>
 

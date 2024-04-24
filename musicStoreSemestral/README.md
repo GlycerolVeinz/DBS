@@ -56,7 +56,7 @@
         </ul>
     </li>
 
-    <li> superiority (<u>isSuperior, isUnderling</u>)
+    <li> superiority (<u>superiorityId</u>, superiorId, underlingId,<u>isSuperior, isUnderling</u>)
         <ul>
             <li>FK: superiority(isSuperior) ⊆ WorkerUser(personalIdentificationNumber)</li>
             <li>FK: superiority(isUnderling) ⊆ WorkerUser(personalIdentificationNumber)</li>
@@ -84,7 +84,7 @@
 </ul>
 
 <ul>
-    <li> Product (<u>productID</u>, <u>ISBN</u>, <u>modelNumber</u>, manufacturer, location)
+    <li> Product (<u>productID</u>, <u>ISBN</u>, <u>modelNumber</u>, location)
         <ul>
             <li>FK: Product(location) ⊆ Store(location)</li>
         </ul>
@@ -94,15 +94,21 @@
 <ul>
     <li> InstrumentProduct (<u>instrumentId</u>, <u>modelNumber</u>, range, type, pickupType)
         <ul>
-            <li>pickupType(<u>pickupId</u>, <u>modelNumber</u>, <u>pickupModelNumber</u>, name)
-                <ul>
-                    <li>FK: pickupType(modelNumber) ⊆ InstrumentProduct(modelNumber)</li>
-                </ul>
-            </li>
             <li>FK: InstrumentProduct(ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
         </ul>
     </li>
 
+    <li>PickupType(<u>pickupId</u>, <u>modelNumber</u>, name)</li>
+    
+    <li> InstrumentPickup (<u>installedOnId</u>, instrumentId, pickupID, modelNumber, pickupModelNumber)
+        <ul>
+            <li>FK: InstrumentPickup(modelNumber) ⊆ InstrumentProduct(modelNumber)</li>
+            <li>FK: InstrumentPickup(pickupModelNumber) ⊆ Pickup(modelNumber)</li>
+            <li>FK: InstrumentPickup(instrumentId) ⊆ InstrumentProduct(instrumentId)</li>
+            <li>FK: InstrumentPickup(pickupID) ⊆ Pickup(pickupID)</li>
+        </ul>
+    </li>
+    
     <li> includes(<u>ISBN</u>, <u>modelNumber</u>)
         <ul>
             <li>FK: includes(modelNumber) ⊆ InstrumentProduct(modelNumber)</li>
@@ -129,7 +135,7 @@
 
 ## Database
 
-### SQL table creation
+### SQL table creation with data
 ```sql
 -- Creating tables =====================================================================================================
 CREATE TABLE Users (
@@ -149,7 +155,7 @@ CREATE TABLE PrivateInfo (
     street VARCHAR(50),
     city VARCHAR(50),
     zip VARCHAR(50),
-    phoneNumber VARCHAR(10),
+    phoneNumber VARCHAR(12),
     password VARCHAR(50),
     PRIMARY KEY (userNickname, userMail, fullName, street, city, zip, phoneNumber),
     FOREIGN KEY (userNickname, userMail) REFERENCES Users(nickname, email)
@@ -188,23 +194,34 @@ CREATE TABLE CustomerUser (
 
 
 CREATE TABLE Superiority (
-    isSuperior VARCHAR(50) NOT NULL,
-    isUnderling VARCHAR(50) NOT NULL,
-    PRIMARY KEY (isSuperior, isUnderling),
+    superiorityId SERIAL PRIMARY KEY,    
+    superiorId INTEGER,
+    underlingId INTEGER,
+    isSuperior VARCHAR(50),
+    isUnderling VARCHAR(50),
     FOREIGN KEY (isSuperior) REFERENCES WorkerUser(personalIdentificationNumber)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     FOREIGN KEY (isUnderling) REFERENCES WorkerUser(personalIdentificationNumber)
         ON DELETE CASCADE
-        ON UPDATE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (superiorId) REFERENCES WorkerUser(workerId)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (underlingId) REFERENCES WorkerUser(workerId)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT check_notSuperiorToMyself CHECK (superiorId != underlingId),
+    CONSTRAINT check_uniqueSuperiority UNIQUE (isSuperior, isUnderling)
 );
 
 
 CREATE TABLE buys (
+    purchaseId SERIAL PRIMARY KEY,
     ISBN VARCHAR(50) NOT NULL,
     userNickname VARCHAR(50) NOT NULL,
     userMail VARCHAR(50) NOT NULL,
-    PRIMARY KEY (userNickname, userMail, ISBN),
+    CONSTRAINT check_uniqueBuyingInfo UNIQUE (userNickname, userMail, ISBN),
     FOREIGN KEY (ISBN) REFERENCES Product(ISBN)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -224,7 +241,6 @@ CREATE TABLE Product (
     productID SERIAL UNIQUE,
     ISBN VARCHAR(50) NOT NULL,
     modelNumber VARCHAR(50) NOT NULL,
-    manufacturer VARCHAR(50),
     location VARCHAR(50),
     PRIMARY KEY (ISBN, modelNumber),
     FOREIGN KEY (location) REFERENCES Store(location)
@@ -239,25 +255,44 @@ CREATE TABLE InstrumentProduct (
     modelNumber VARCHAR(50) PRIMARY KEY NOT NULL,
     range VARCHAR(50) CHECK (range LIKE '%Hz-%Hz'),
     type VARCHAR(50) CHECK (type IN ('key', 'string', 'wind', 'percussion', 'special')),
-    pickupModel VARCHAR(50),
-    FOREIGN KEY (pickupModel) REFERENCES PickupType(modelNumber)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
     FOREIGN KEY (modelNumber, ISBN) REFERENCES Product(modelNumber, ISBN)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 
-CREATE TABLE PickupType (
+CREATE TABLE Pickup (
     pickupId SERIAL UNIQUE,
-    name VARCHAR(50) NOT NULL 
-        CHECK (name IN ('single coil', 'humbucker', 'piezo', 'lipstick', 'active', 'passive')),
-    instrumentModelNumber VARCHAR(50),
     modelNumber VARCHAR(50) PRIMARY KEY NOT NULL,
-    FOREIGN KEY (instrumentModelNumber) REFERENCES InstrumentProduct(modelNumber)
+    name VARCHAR(50) NOT NULL,
+    CONSTRAINT check_pickupType 
+        CHECK (name IN ('single coil', 'humbucker', 'piezo', 'lipstick', 'active', 'passive'))
+);
+
+
+CREATE TABLE InstrumentPickup (
+    installedOnId SERIAL PRIMARY KEY,
+    instrumentId INTEGER NOT NULL,
+    pickupID INTEGER,
+    modelNumber VARCHAR(50) NOT NULL,
+    pickupModelNumber VARCHAR(50),
+    FOREIGN KEY (modelNumber) REFERENCES InstrumentProduct(modelNumber)
         ON DELETE CASCADE
-        ON UPDATE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (pickupModelNumber) REFERENCES Pickup(modelNumber)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (instrumentId) REFERENCES InstrumentProduct(instrumentId)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (pickupID) REFERENCES Pickup(pickupID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT check_noPickupAtAll
+        CHECK (
+            (pickupID IS NULL AND pickupModelNumber IS NULL) OR
+            (pickupID IS NOT NULL AND pickupModelNumber IS NOT NULL)
+        )                        
 );
 
 
@@ -324,8 +359,7 @@ CREATE TYPE InstrumentProductType AS (
     ISBN VARCHAR(50),
     modelNumber VARCHAR(50),
     range VARCHAR(50),
-    type VARCHAR(50),
-    pickupModel VARCHAR(50)
+    type VARCHAR(50)
 );
     
 
@@ -340,6 +374,13 @@ CREATE TYPE privateInfoType AS (
     phoneNumber VARCHAR(10),
     password VARCHAR(50)
 );
+
+
+CREATE TYPE intPair AS (
+    frst INTEGER,
+    scnd INTEGER
+);
+
 
 -- Insert functions for easy and safe hereditary data insertion =======================================================
 CREATE OR REPLACE FUNCTION insertWorkerUser(
@@ -420,8 +461,7 @@ CREATE FUNCTION insertInstrumentProduct(
     i_ISBN VARCHAR(50),
     i_modelNumber VARCHAR(50),
     i_range VARCHAR(50),
-    i_type VARCHAR(50),
-    i_pickupModel VARCHAR(50)
+    i_type VARCHAR(50)
 ) RETURNS VOID AS $$
 DECLARE
     e_productID INTEGER;
@@ -431,8 +471,8 @@ BEGIN
         INSERT INTO Product(ISBN, modelNumber) VALUES (i_ISBN, i_modelNumber);
     END IF;
     
-    INSERT INTO InstrumentProduct(ISBN, modelNumber, range, type, pickupModel) 
-        VALUES (i_ISBN, i_modelNumber, i_range, i_type, i_pickupModel);
+    INSERT INTO InstrumentProduct(ISBN, modelNumber, range, type) 
+        VALUES (i_ISBN, i_modelNumber, i_range, i_type);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -447,8 +487,7 @@ BEGIN
         PERFORM insertInstrumentProduct(instrumentRecord.ISBN,
                                         instrumentRecord.modelNumber,
                                         instrumentRecord.range,
-                                        instrumentRecord.type,
-                                        instrumentRecord.pickupModel);
+                                        instrumentRecord.type);
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;
@@ -538,6 +577,71 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION insertSuperiorityRelation(superior_workerId INTEGER, underling_workerId INTEGER)
+    RETURNS void AS $$
+DECLARE
+    superior_pn VARCHAR(50);
+    underling_pn VARCHAR(50);
+BEGIN
+    SELECT personalIdentificationNumber INTO superior_pn FROM WorkerUser WHERE workerId = superior_workerId;
+    SELECT personalIdentificationNumber INTO underling_pn FROM WorkerUser WHERE workerId = underling_workerId;
+
+    IF superior_pn IS NOT NULL AND underling_pn IS NOT NULL THEN
+        INSERT INTO Superiority (superiorId, underlingId, isSuperior, isUnderling)
+        VALUES (superior_workerId, underling_workerId, superior_pn, underling_pn);
+    ELSE
+        RAISE EXCEPTION 'Invalid worker IDs: % %', superior_workerId, underling_workerId;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION insertSuperiorityRelations(i_pairs intPair[])
+RETURNS VOID AS $$
+DECLARE
+    pair intPair;
+BEGIN
+    FOREACH pair IN ARRAY i_pairs
+    LOOP
+        PERFORM insertSuperiorityRelation(pair.frst, pair.scnd);
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION insertInstrumentPickup(
+    i_instrumentId INTEGER,
+    i_pickupID INTEGER
+) RETURNS VOID AS $$
+DECLARE
+    e_instrument_mn INTEGER;
+    e_pickupID_mn INTEGER;
+BEGIN
+    SELECT modelNumber INTO e_instrument_mn FROM InstrumentProduct WHERE instrumentId = i_instrumentId;
+    SELECT modelNumber INTO e_pickupID_mn FROM Pickup WHERE pickupId = i_pickupID;
+    IF e_instrument_mn IS NOT NULL AND e_pickupID_mn IS NOT NULL THEN
+        INSERT INTO InstrumentPickup(instrumentId, pickupID, modelNumber, pickupModelNumber)
+        VALUES (i_instrumentId, i_pickupID, e_instrument_mn, e_pickupID_mn);
+    ELSE
+        RAISE EXCEPTION 'Invalid instrument ID: % or pickup ID: %', i_instrumentId, i_pickupID;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION insertInstrumentPickups(i_pairs intPair[])
+RETURNS VOID AS $$
+DECLARE
+    pair intPair;
+BEGIN
+    FOREACH pair IN ARRAY i_pairs
+    LOOP
+        PERFORM insertInstrumentPickup(pair.frst, pair.scnd);
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- Inserting data in to tables =========================================================================================
     -- Insert at least 10 records into each table
 
@@ -579,5 +683,98 @@ SELECT insertCustomers(ARRAY[
     ('customer10', 'cus10@seznam.cz', 291, FALSE)
     ]::CustomerUserType[]);
     
+
+-- superiority should be like a tree
+SELECT insertSuperiorityRelations(ARRAY[
+    (1, 2),
+    (1, 3),
+    (1, 9),
+    (3, 4),
+    (4, 7),
+    (4, 8),
+    (5, 6),
+    (5, 10),
+    (5, 8),
+    (9, 10)
+    ]::intPair[]);
+
+SELECT insertPrivateInfos(ARRAY[
+    ('worker1', 'worker1@gmail.com', 'John Doe', '123', 'Main Street', 'Prague', '12345', '420123456789', 'password1'),
+    ('worker2', 'worker2@gmail.com', 'Jane Doe', '456', 'Second Street', 'Prague', '54321', '420987654321', 'password2'),
+    ('worker3', 'worker3@gmail.com', 'John Smith', '789', 'Third Street', 'Brno', '67890', '420123123123', 'password3'),
+    ('worker4', 'worker4@gmail.com', 'Jane Smith', '012', 'Fourth Street', 'Praha', '09876', '420321321321', 'password4'),
+    ('worker5', 'worker5@gmail.com', 'John Johnson', '345', 'Fifth Street', 'Ostrava', '54321', '420456456456', 'password5'),
+    ('worker6', 'worker6@gmail.com', 'Jane Johnson', '678', 'Sixth Street', 'Online', '67890', '420654654654', 'password6'),
+    ('customer4', 'cus4@seznam.cz', 'Bob Doe', '123', 'Main Street', 'Prague', '12345', '420123456789', 'password1'),
+    ('customer9', 'cus9@seznam.cz', 'Janek Doe', '456', 'Second Street', 'Prague', '54321', '420987654321', 'password2'),
+    ('customer10', 'cus10@seznam.cz', 'Pepa Smith', '789', 'Third Street', 'Brno', '67890', '420123123123', 'password3'),
+    ('customer7', 'cus7@seznam.cz', 'Janek Smith', '012', 'Fourth Street', 'Praha', '09876', '420321321321', 'password4')
+    ]::privateInfoType[]);
+
+COPY Accessory(ISBN, type) FROM '/home/safor/Documents/Cvut/DBS/musicStoreSemestralaccessories.csv' WITH (FORMAT csv);
+
+SELECT insertInstruments(ARRAY[
+    ('123456789', 'instrument1', '20Hz-20kHz', 'key'),
+    ('187654321', 'instrument2', '20Hz-20kHz', 'string'),
+    ('123123123', 'instrument3', '20Hz-20kHz', 'wind'),
+    ('121321321', 'instrument4', '20Hz-20kHz', 'percussion'),
+    ('156121212', 'instrument5', '20Hz-20kHz', 'special'),
+    ('154654654', 'instrument6', '20Hz-20kHz', 'key'),
+    ('189789789', 'instrument7', '20Hz-20kHz', 'string'),
+    ('187987987', 'instrument8', '20Hz-20kHz', 'wind'),
+    ('154654654', 'instrument9', '20Hz-20kHz', 'percussion'),
+    ('121321321', 'instrument10', '20Hz-20kHz', 'special')
+    ]::InstrumentProductType[]);
+
+SELECT insertPASystems(ARRAY[
+    ('223456789', 'system1', '20Hz-20kHz', 'active', '8Ohm'),
+    ('287654321', 'system2', '20Hz-20kHz', 'passive', '4Ohm'),
+    ('223123123', 'system3', '20Hz-20kHz', 'active', '8Ohm'),
+    ('221321321', 'system4', '20Hz-20kHz', 'passive', '4Ohm'),
+    ('256121212', 'system5', '20Hz-20kHz', 'active', '8Ohm'),
+    ('254654654', 'system6', '20Hz-20kHz', 'passive', '4Ohm'),
+    ('289789789', 'system7', '20Hz-20kHz', 'active', '8Ohm'),
+    ('287987987', 'system8', '20Hz-20kHz', 'passive', '4Ohm'),
+    ('254654654', 'system9', '20Hz-20kHz', 'active', '8Ohm'),
+    ('221321321', 'system10', '20Hz-20kHz', 'passive', '4Ohm')
+    ]::PASystemProductType[]);
+
+SELECT insertInstrumentPickups(ARRAY[
+    (1, 1001),
+    (2, 23),
+    (3, 32),
+    (4, 41),
+    (5, 75),
+    (6, 61),
+    (7, 67),
+    (8, 38),
+    (9, 90),
+    (10, 100)
+    ]::intPair[]);
+
+INSERT INTO buys(ISBN, userNickname, userMail)
+    VALUES  ('223456789', 'customer1', 'cus1@seznam.cz'),
+            ('287654321', 'customer2', 'cus2@seznam.cz'),
+            ('223123123', 'customer3', 'cus3@seznam.cz'),
+            ('221321321', 'customer4', 'cus4@seznam,cz'),
+            ('256121212', 'customer5', 'cus5@seznam,cz'),
+            ('254654654', 'customer6', 'cus6@seznam,cz'),
+            ('189789789', 'customer7', 'cus7@seznam,cz'),
+            ('187987987', 'customer8', 'cus8@seznam,cz'),
+            ('154654654', 'customer9', 'cus9@seznam,cz'),
+            ('121321321', 'customer10', 'cus10@seznam,cz');
+
+    -- put some products into one of the stores (location) -> the product is still in store
+UPDATE Product SET location = 'Prague/Muzeum' WHERE modelNumber = 'instrument1';
+UPDATE Product SET location = 'Prague/Andel' WHERE modelNumber = 'instrument2';
+UPDATE Product SET location = 'Brno/Namesti Svobody' WHERE modelNumber = 'instrument3';
+UPDATE Product SET location = 'Praha/Namesti Republiky' WHERE modelNumber = 'instrument4';
+UPDATE Product SET location = 'Ostrava/Namesti Svobody' WHERE modelNumber = 'instrument5';
+UPDATE Product SET location = 'Online' WHERE modelNumber = 'instrument6';
+UPDATE Product SET location = 'Berlin/Alexanderplatz' WHERE modelNumber = 'system1';
+UPDATE Product SET location = 'Berlin/Kurfurstendamm' WHERE modelNumber = 'system2';
+UPDATE Product SET location = 'Vienna/Stephansplatz' WHERE modelNumber = 'system3';
+UPDATE Product SET location = 'Vienna/Praterstern' WHERE modelNumber = 'system4';
+
 
 ```
