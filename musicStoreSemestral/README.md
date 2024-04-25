@@ -135,12 +135,13 @@
 
 ## Database
 
-### SQL table creation with data
+### SQL
+
 ```sql
 -- Creating tables =====================================================================================================
 CREATE TABLE Users (
-    userID SERIAL UNIQUE,
-    nickname VARCHAR(50) NOT NULL,
+   userID SERIAL UNIQUE,
+   nickname VARCHAR(50) NOT NULL,
     email VARCHAR(50) NOT NULL
         CHECK ( email LIKE '%@%'),
     PRIMARY KEY (nickname, email)
@@ -219,10 +220,11 @@ CREATE TABLE Superiority (
 CREATE TABLE buys (
     purchaseId SERIAL PRIMARY KEY,
     ISBN VARCHAR(50) NOT NULL,
+    modelNumber VARCHAR(50) NOT NULL,
     userNickname VARCHAR(50) NOT NULL,
     userMail VARCHAR(50) NOT NULL,
     CONSTRAINT check_uniqueBuyingInfo UNIQUE (userNickname, userMail, ISBN),
-    FOREIGN KEY (ISBN) REFERENCES Product(ISBN)
+    FOREIGN KEY (ISBN, modelNumber) REFERENCES Product(ISBN, modelNumber)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     FOREIGN KEY (userNickname, userMail) REFERENCES CustomerUser(userNickname, userMail)
@@ -666,9 +668,10 @@ SELECT insertWorkers(ARRAY[
     ('654654654', 'worker6', 'worker6@gmail.com', 'Online'),
     ('789789789', 'worker7', 'worker7@gmail.com', 'Berlin/Alexanderplatz'),
     ('987987987', 'worker8', 'worker8@gmail.com', 'Berlin/Kurfurstendamm'),
-    ('654654654', 'worker9', 'worker9@gmail.com', 'Vienna/Stephansplatz'),
-    ('321321321', 'worker10', 'worker10@gmail.com', 'Vienna/Praterstern')
+    ('654654655', 'worker9', 'worker9@gmail.com', 'Vienna/Stephansplatz'),
+    ('321321323', 'worker10', 'worker10@gmail.com', 'Vienna/Praterstern')
     ]::WorkerUserType[]);
+
 
 SELECT insertCustomers(ARRAY[
     ('customer1', 'cus1@seznam.cz', 0, FALSE),
@@ -686,16 +689,16 @@ SELECT insertCustomers(ARRAY[
 
 -- superiority should be like a tree
 SELECT insertSuperiorityRelations(ARRAY[
-    (1, 2),
-    (1, 3),
-    (1, 9),
-    (3, 4),
-    (4, 7),
-    (4, 8),
-    (5, 6),
-    (5, 10),
-    (5, 8),
-    (9, 10)
+    (11, 12),
+    (11, 13),
+    (11, 19),
+    (13, 14),
+    (14, 17),
+    (14, 18),
+    (15, 16),
+    (15, 110),
+    (15, 18),
+    (19, 20)
     ]::intPair[]);
 
 SELECT insertPrivateInfos(ARRAY[
@@ -739,6 +742,18 @@ SELECT insertPASystems(ARRAY[
     ('221321321', 'system10', '20Hz-20kHz', 'passive', '4Ohm')
     ]::PASystemProductType[]);
 
+INSERT INTO Pickup(modelNumber, name) VALUES
+                                          ('23', 'single coil'),
+                                          ('32', 'humbucker'),
+                                          ('41', 'piezo'),
+                                          ('75', 'lipstick'),
+                                          ('61', 'active'),
+                                          ('67', 'passive'),
+                                          ('38', 'single coil'),
+                                          ('90', 'humbucker'),
+                                          ('100', 'piezo'),
+                                          ('1001', 'lipstick');
+
 SELECT insertInstrumentPickups(ARRAY[
     (1, 1001),
     (2, 23),
@@ -752,17 +767,17 @@ SELECT insertInstrumentPickups(ARRAY[
     (10, 100)
     ]::intPair[]);
 
-INSERT INTO buys(ISBN, userNickname, userMail)
-    VALUES  ('223456789', 'customer1', 'cus1@seznam.cz'),
-            ('287654321', 'customer2', 'cus2@seznam.cz'),
-            ('223123123', 'customer3', 'cus3@seznam.cz'),
-            ('221321321', 'customer4', 'cus4@seznam,cz'),
-            ('256121212', 'customer5', 'cus5@seznam,cz'),
-            ('254654654', 'customer6', 'cus6@seznam,cz'),
-            ('189789789', 'customer7', 'cus7@seznam,cz'),
-            ('187987987', 'customer8', 'cus8@seznam,cz'),
-            ('154654654', 'customer9', 'cus9@seznam,cz'),
-            ('121321321', 'customer10', 'cus10@seznam,cz');
+INSERT INTO buys(ISBN, modelNumber, userNickname, userMail)
+    VALUES  ('223456789', 'system1', 'customer1', 'cus1@seznam.cz'),
+            ('287654321', 'system2', 'customer2', 'cus2@seznam.cz'),
+            ('223123123', 'system3', 'customer3', 'cus3@seznam.cz'),
+            ('221321321', 'system4', 'customer4', 'cus4@seznam,cz'),
+            ('256121212', 'system5', 'customer5', 'cus5@seznam,cz'),
+            ('254654654', 'system6', 'customer6', 'cus6@seznam,cz'),
+            ('123456789', 'instrument1', 'customer7', 'cus7@seznam,cz'),
+            ('187654321', 'instrument2', 'customer8', 'cus8@seznam,cz'),
+            ('123123123', 'instrument3', 'customer9', 'cus9@seznam,cz'),
+            ('121321321', 'instrument4', 'customer10', 'cus10@seznam,cz');
 
     -- put some products into one of the stores (location) -> the product is still in store
 UPDATE Product SET location = 'Prague/Muzeum' WHERE modelNumber = 'instrument1';
@@ -776,5 +791,47 @@ UPDATE Product SET location = 'Berlin/Kurfurstendamm' WHERE modelNumber = 'syste
 UPDATE Product SET location = 'Vienna/Stephansplatz' WHERE modelNumber = 'system3';
 UPDATE Product SET location = 'Vienna/Praterstern' WHERE modelNumber = 'system4';
 
+-- SQL queries =========================================================================================================
+
+-- This query uses a LEFT OUTER JOIN to ensure that all instruments are listed, 
+-- even those without any associated pickups.
+SELECT ip.instrumentId, ip.modelNumber, p.name AS pickup_name
+FROM InstrumentProduct ip
+LEFT OUTER JOIN InstrumentPickup ipu ON ip.instrumentId = ipu.instrumentId
+LEFT OUTER JOIN Pickup p ON ipu.pickupModelNumber = p.modelNumber;
+
+-- This query uses INNER JOIN to combine rows from 
+-- InstrumentProduct, Product, and Store tables 
+-- where there are matches in the ISBN and location columns, respectively.
+SELECT ip.modelNumber, ip.type, s.location
+FROM InstrumentProduct ip
+         INNER JOIN Product p ON ip.ISBN = p.ISBN
+         INNER JOIN Store s ON p.location = s.location;
+
+-- This query searches for accessories 
+-- where the type starts with 'Bass'  and the ISBN starts with '97'.
+SELECT *
+FROM Accessory
+WHERE type = 'Bass%' AND ISBN LIKE '97%';
+
+-- This query groups instruments by type and counts them, 
+-- only showing those types where there are more than 5 instruments.
+SELECT type, COUNT(*) AS num_instruments
+FROM Accessory
+GROUP BY Accessory.type
+HAVING COUNT(*) > 5;
+
+-- This UNION operation combines and removes duplicates, 
+-- listing all unique ISBNs across both tables.
+SELECT ISBN FROM InstrumentProduct
+UNION
+SELECT ISBN FROM PASystemProduct;
+
+-- This query uses a nested SELECT to find instruments 
+-- that have an ISBN that is also listed in the Accessory table.
+-- (could be good to eliminate duplicate ISBNs)
+SELECT *
+FROM InstrumentProduct
+WHERE ISBN IN (SELECT ISBN FROM Accessory);
 
 ```
