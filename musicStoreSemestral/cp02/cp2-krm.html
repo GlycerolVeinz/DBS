@@ -22,9 +22,9 @@
 </ul>
 
 <ul>
-    <li> WorkerUser (<u>workerId</u>, <u>personalIdentificationNumber</u>, <u>nickname, email</u>, location)
+    <li> WorkerUser (<u>workerId</u>, <u>personalIdentificationNumber</u>, <u>userNickname, userMail</u>, location)
         <ul>
-            <li>FK: WorkerUser(nickname, email) ⊆ User(nickname, email)</li>
+            <li>FK: WorkerUser(userNickname, userMail) ⊆ User(nickname, email)</li>
             <li>FK: WorkerUser(location) ⊆ Store(location)</li>
         </ul>
     </li>
@@ -33,20 +33,22 @@
         <ul>
             <li>FK: superiority(isSuperior) ⊆ WorkerUser(personalIdentificationNumber)</li>
             <li>FK: superiority(isUnderling) ⊆ WorkerUser(personalIdentificationNumber)</li>
+            <li>FK: superiority(superiorId) ⊆ WorkerUser(workerId)</li>
+            <li>FK: superiority(underlingId) ⊆ WorkerUser(workerId)</li>
         </ul>
     </li>
 </ul>
 
 <ul>
-    <li> CustomerUser (<u>customerID</u>, <u>nickname, email</u>, cookies, premiumStatus)
+    <li> CustomerUser (<u>customerID</u>, <u>userNickname, userMail</u>, cookies, premiumStatus)
         <ul>
             <li>FK: (nickname, email) ⊆ User(nickname, email)</li>
         </ul>
     </li>
 
-    <li> buys (<u>ISBN</u>, <u>nickname, email</u>)
+    <li> buys (<u>purchaseId</u>, <u>ISBN, modelNumber</u>, <u>nickname, email</u>)
         <ul>
-            <li>FK: buys(ISBN) ⊆ Product(ISBN)</li>
+            <li>FK: buys(ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
             <li>FK: buys(nickname, email) ⊆ CustomerUser(nickname, email)</li>
         </ul>
     </li>
@@ -57,7 +59,7 @@
 </ul>
 
 <ul>
-    <li> Product (<u>productID</u>, <u>ISBN</u>, <u>modelNumber</u>, manufacturer, location)
+    <li> Product (<u>productID</u>, <u>ISBN</u>, <u>modelNumber</u>, location)
         <ul>
             <li>FK: Product(location) ⊆ Store(location)</li>
         </ul>
@@ -65,13 +67,13 @@
 </ul>
 
 <ul>
-    <li> InstrumentProduct (<u>instrumentId</u>, <u>modelNumber</u>, range, type, pickupType)
+    <li> InstrumentProduct (<u>instrumentId</u>, <u>modelNumber, ISBN</u>, range, type)
         <ul>
             <li>FK: InstrumentProduct(ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
         </ul>
     </li>
 
-    <li>PickupType(<u>pickupId</u>, <u>modelNumber</u>, name)</li>
+    <li>Pickup(<u>pickupId</u>, <u>modelNumber</u>, name)</li>
 
     <li> InstrumentPickup (<u>installedOnId</u>, instrumentId, pickupID, modelNumber, pickupModelNumber)
         <ul>
@@ -79,13 +81,6 @@
             <li>FK: InstrumentPickup(pickupModelNumber) ⊆ Pickup(modelNumber)</li>
             <li>FK: InstrumentPickup(instrumentId) ⊆ InstrumentProduct(instrumentId)</li>
             <li>FK: InstrumentPickup(pickupID) ⊆ Pickup(pickupID)</li>
-        </ul>
-    </li>
-
-    <li> includes(<u>ISBN</u>, <u>modelNumber</u>)
-        <ul>
-            <li>FK: includes(modelNumber) ⊆ InstrumentProduct(modelNumber)</li>
-            <li>FK: includes(ISBN) ⊆ Accessory(ISBN)</li>
         </ul>
     </li>
 </ul>
@@ -99,7 +94,11 @@
 </ul>
 
 <ul>
-    <li> Accessory (<u>accessoryId</u>, <u>ISBN</u>, type)</li>
+    <li> Accessory (<u>accessoryId</u>, <u>ISBN</u>, type, comesWith)
+        <ul>
+            <li>FK: Accessory(comesWith) ⊆ InstrumentProduct(modelNumber)</li>
+        </ul>
+    </li>
 </ul>
 
 </body>

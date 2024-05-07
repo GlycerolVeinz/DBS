@@ -49,9 +49,9 @@
 </ul>
 
 <ul>
-    <li> WorkerUser (<u>workerId</u>, <u>personalIdentificationNumber</u>, <u>nickname, email</u>, location)
+    <li> WorkerUser (<u>workerId</u>, <u>personalIdentificationNumber</u>, <u>userNickname, userMail</u>, location)
         <ul>
-            <li>FK: WorkerUser(nickname, email) ⊆ User(nickname, email)</li>
+            <li>FK: WorkerUser(userNickname, userMail) ⊆ User(nickname, email)</li>
             <li>FK: WorkerUser(location) ⊆ Store(location)</li>
         </ul>
     </li>
@@ -60,20 +60,22 @@
         <ul>
             <li>FK: superiority(isSuperior) ⊆ WorkerUser(personalIdentificationNumber)</li>
             <li>FK: superiority(isUnderling) ⊆ WorkerUser(personalIdentificationNumber)</li>
+            <li>FK: superiority(superiorId) ⊆ WorkerUser(workerId)</li>
+            <li>FK: superiority(underlingId) ⊆ WorkerUser(workerId)</li>
         </ul>
     </li>
 </ul>
 
 <ul>
-    <li> CustomerUser (<u>customerID</u>, <u>nickname, email</u>, cookies, premiumStatus)
+    <li> CustomerUser (<u>customerID</u>, <u>userNickname, userMail</u>, cookies, premiumStatus)
         <ul>
             <li>FK: (nickname, email) ⊆ User(nickname, email)</li>
         </ul>
     </li>
 
-    <li> buys (<u>ISBN</u>, <u>nickname, email</u>)
+    <li> buys (<u>purchaseId</u>, <u>ISBN, modelNumber</u>, <u>nickname, email</u>)
         <ul>
-            <li>FK: buys(ISBN) ⊆ Product(ISBN)</li>
+            <li>FK: buys(ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
             <li>FK: buys(nickname, email) ⊆ CustomerUser(nickname, email)</li>
         </ul>
     </li>
@@ -92,13 +94,13 @@
 </ul>
 
 <ul>
-    <li> InstrumentProduct (<u>instrumentId</u>, <u>modelNumber</u>, range, type, pickupType)
+    <li> InstrumentProduct (<u>instrumentId</u>, <u>modelNumber, ISBN</u>, range, type)
         <ul>
             <li>FK: InstrumentProduct(ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
         </ul>
     </li>
 
-    <li>PickupType(<u>pickupId</u>, <u>modelNumber</u>, name)</li>
+    <li>Pickup(<u>pickupId</u>, <u>modelNumber</u>, name)</li>
     
     <li> InstrumentPickup (<u>installedOnId</u>, instrumentId, pickupID, modelNumber, pickupModelNumber)
         <ul>
@@ -106,13 +108,6 @@
             <li>FK: InstrumentPickup(pickupModelNumber) ⊆ Pickup(modelNumber)</li>
             <li>FK: InstrumentPickup(instrumentId) ⊆ InstrumentProduct(instrumentId)</li>
             <li>FK: InstrumentPickup(pickupID) ⊆ Pickup(pickupID)</li>
-        </ul>
-    </li>
-    
-    <li> includes(<u>ISBN</u>, <u>modelNumber</u>)
-        <ul>
-            <li>FK: includes(modelNumber) ⊆ InstrumentProduct(modelNumber)</li>
-            <li>FK: includes(ISBN) ⊆ Accessory(ISBN)</li>
         </ul>
     </li>
 </ul>
@@ -126,7 +121,11 @@
 </ul>
 
 <ul>
-    <li> Accessory (<u>accessoryId</u>, <u>ISBN</u>, type)</li>
+    <li> Accessory (<u>accessoryId</u>, <u>ISBN</u>, type, comesWith)
+        <ul>
+            <li>FK: Accessory(comesWith) ⊆ InstrumentProduct(modelNumber)</li>
+        </ul>
+    </li>
 </ul>
 
 </body>
@@ -327,7 +326,10 @@ CREATE TABLE PASystemProduct (
 CREATE TABLE Accessory (
     accessoryId SERIAL UNIQUE,
     ISBN VARCHAR(50) PRIMARY KEY NOT NULL,
-    type VARCHAR(50)
+    type VARCHAR(50),
+    comesWith VARCHAR(50) references InstrumentProduct(modelNumber)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
 );
 
 
@@ -646,6 +648,7 @@ $$ LANGUAGE plpgsql;
 
 -- Inserting data in to tables =========================================================================================
     -- Insert at least 10 records into each table
+    -- !!! NOTE: Some numeric values could be flawed, check server for data that was inputted 
 
 INSERT INTO Store(location) 
     VALUES ('Prague/Muzeum'),
@@ -755,16 +758,16 @@ INSERT INTO Pickup(modelNumber, name) VALUES
                                           ('1001', 'lipstick');
 
 SELECT insertInstrumentPickups(ARRAY[
-    (1, 1001),
-    (2, 23),
-    (3, 32),
-    (4, 41),
-    (5, 75),
-    (6, 61),
-    (7, 67),
-    (8, 38),
-    (9, 90),
-    (10, 100)
+    (10, 5),
+    (12, 6),
+    (13, 7),
+    (14, 8),
+    (15, 9),
+    (16, 10),
+    (17, 1),
+    (18, 2),
+    (11, 3),
+    (19, 4)
     ]::intPair[]);
 
 INSERT INTO buys(ISBN, modelNumber, userNickname, userMail)
@@ -792,7 +795,13 @@ UPDATE Product SET location = 'Vienna/Stephansplatz' WHERE modelNumber = 'system
 UPDATE Product SET location = 'Vienna/Praterstern' WHERE modelNumber = 'system4';
 
 -- SQL queries =========================================================================================================
-
+-- forgot to add link between accessory and instrument
+ALTER TABLE accessory ADD COLUMN comesWith VARCHAR(50);
+ALTER TABLE accessory
+    ADD FOREIGN KEY (comesWith) REFERENCES instrumentproduct(modelNumber)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE;
+    
 -- This query uses a LEFT OUTER JOIN to ensure that all instruments are listed, 
 -- even those without any associated pickups.
 SELECT ip.instrumentId, ip.modelNumber, p.name AS pickup_name
@@ -833,5 +842,65 @@ SELECT ISBN FROM PASystemProduct;
 SELECT *
 FROM InstrumentProduct
 WHERE ISBN IN (SELECT ISBN FROM Accessory);
+
+
+-- Trigger
+CREATE OR REPLACE FUNCTION check_accessory_type_conflict()
+    RETURNS TRIGGER AS $$
+DECLARE
+    countSameType INT;
+BEGIN
+    SELECT COUNT(*) INTO countSameType FROM Accessory
+    WHERE comesWith = NEW.comesWith AND type = NEW.type AND ISBN != NEW.ISBN;
+
+    IF countSameType > 0 THEN
+        RAISE EXCEPTION 'An accessory of type % is already assigned to instrument model %', NEW.type, NEW.comesWith;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER trigger_check_accessory_type_conflict
+    BEFORE INSERT OR UPDATE OF comesWith, type ON Accessory
+    FOR EACH ROW
+EXECUTE FUNCTION check_accessory_type_conflict();
+
+
+-- Transaction
+CREATE OR REPLACE FUNCTION assign_accessory_to_instrument(p_accessoryISBN VARCHAR, p_instrumentModelNumber VARCHAR)
+    RETURNS VOID AS $$
+BEGIN
+    -- Check if the accessory exists
+    PERFORM * FROM Accessory WHERE ISBN = p_accessoryISBN FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Accessory with ISBN % does not exist', p_accessoryISBN;
+    END IF;
+
+    -- Check if the instrument product exists
+    PERFORM * FROM InstrumentProduct WHERE modelNumber = p_instrumentModelNumber FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Instrument with model number % does not exist', p_instrumentModelNumber;
+    END IF;
+
+    -- Update the accessory to link it to the instrument
+    UPDATE Accessory SET comesWith = p_instrumentModelNumber WHERE ISBN = p_accessoryISBN;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- View
+CREATE VIEW CustomerInfo AS
+SELECT c.customerid, p.userNickname, p.userMail, p.fullName,
+       p.city, p.zip, p.street, p.phoneNumber,
+       c.cookies, c.premiumstatus
+FROM privateinfo p
+         JOIN customeruser c ON p.userNickname = c.userNickname AND p.userMail = c.userMail;
+
+-- Indexing
+CREATE INDEX idx_AccessoryType ON Accessory(type);
 
 ```
