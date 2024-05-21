@@ -1,0 +1,831 @@
+package Entities.Product;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "accessory")
+public class Accessory {
+    @Id
+    @Column(name = "isbn", nullable = false, length = 50)
+    private String isbn;
+
+    @Column(name = "accessoryid", nullable = false)
+    private Integer accessoryid;
+
+    @Column(name = "type", length = 50)
+    private String type;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comeswith")
+    private InstrumentProduct comeswith;
+
+    public String getIsbn() {
+        return isbn;
+    }
+
+    public void setIsbn(String isbn) {
+        this.isbn = isbn;
+    }
+
+    public Integer getAccessoryid() {
+        return accessoryid;
+    }
+
+    public void setAccessoryid(Integer accessoryid) {
+        this.accessoryid = accessoryid;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public InstrumentProduct getComeswith() {
+        return comeswith;
+    }
+
+    public void setComeswith(InstrumentProduct comeswith) {
+        this.comeswith = comeswith;
+    }
+
+}
+package Entities.Product;
+
+import Entities.User.CustomerUser;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "buys")
+public class Buy {
+    @Id
+    @Column(name = "purchaseid", nullable = false)
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private CustomerUser customeruser;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public CustomerUser getCustomeruser() {
+        return customeruser;
+    }
+
+    public void setCustomeruser(CustomerUser customeruser) {
+        this.customeruser = customeruser;
+    }
+
+}
+package Entities.Product;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "instrumentpickup")
+public class Instrumentpickup {
+    @Id
+    @Column(name = "installedonid", nullable = false)
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "instrumentid", nullable = false, referencedColumnName = "instrumentid")
+    private InstrumentProduct instrumentid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pickupid", referencedColumnName = "pickupid")
+    private Pickup pickupid;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "modelnumber", nullable = false)
+    private InstrumentProduct modelnumber;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pickupmodelnumber")
+    private Pickup pickupmodelnumber;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public InstrumentProduct getInstrumentid() {
+        return instrumentid;
+    }
+
+    public void setInstrumentid(InstrumentProduct instrumentid) {
+        this.instrumentid = instrumentid;
+    }
+
+    public Pickup getPickupid() {
+        return pickupid;
+    }
+
+    public void setPickupid(Pickup pickupid) {
+        this.pickupid = pickupid;
+    }
+
+    public InstrumentProduct getModelnumber() {
+        return modelnumber;
+    }
+
+    public void setModelnumber(InstrumentProduct modelnumber) {
+        this.modelnumber = modelnumber;
+    }
+
+    public Pickup getPickupmodelnumber() {
+        return pickupmodelnumber;
+    }
+
+    public void setPickupmodelnumber(Pickup pickupmodelnumber) {
+        this.pickupmodelnumber = pickupmodelnumber;
+    }
+
+}
+package Entities.Product;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "instrumentproduct")
+@AttributeOverrides({
+        @AttributeOverride(name = "id.isbn", column = @Column(name = "instrument_isbn")),
+        @AttributeOverride(name = "id.modelnumber", column = @Column(name = "instrument_modelnumber"))
+})
+public class InstrumentProduct extends Product {
+    @Column(name = "instrumentid", nullable = false)
+    private Integer instrumentid;
+
+    @Column(name = "range", length = 50)
+    private String range;
+
+    @Column(name = "type", length = 50)
+    private String type;
+
+    // Getters and Setters
+    public Integer getInstrumentid() {
+        return instrumentid;
+    }
+
+    public void setInstrumentid(Integer instrumentid) {
+        this.instrumentid = instrumentid;
+    }
+
+    public String getRange() {
+        return range;
+    }
+
+    public void setRange(String range) {
+        this.range = range;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+}
+package Entities.Product;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "pasystemproduct")
+@AttributeOverrides({
+        @AttributeOverride(name = "id.isbn", column = @Column(name = "pasystem_isbn")),
+        @AttributeOverride(name = "id.modelnumber", column = @Column(name = "pasystem_modelnumber"))
+})
+public class PASystemProduct extends Product {
+    @Column(name = "systemid", nullable = false)
+    private Integer systemid;
+
+    @Column(name = "range", length = 50)
+    private String range;
+
+    @Column(name = "type", length = 50)
+    private String type;
+
+    @Column(name = "resistance", length = 50)
+    private String resistance;
+
+    // Getters and Setters
+    public Integer getSystemid() {
+        return systemid;
+    }
+
+    public void setSystemid(Integer systemid) {
+        this.systemid = systemid;
+    }
+
+    public String getRange() {
+        return range;
+    }
+
+    public void setRange(String range) {
+        this.range = range;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getResistance() {
+        return resistance;
+    }
+
+    public void setResistance(String resistance) {
+        this.resistance = resistance;
+    }
+}
+package Entities.Product;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "pickup")
+public class Pickup {
+    @Id
+    @Column(name = "modelnumber", nullable = false, length = 50)
+    private String modelnumber;
+
+    @Column(name = "pickupid", nullable = false)
+    private Integer pickupid;
+
+    @Column(name = "name", nullable = false, length = 50)
+    private String name;
+
+    public String getModelnumber() {
+        return modelnumber;
+    }
+
+    public void setModelnumber(String modelnumber) {
+        this.modelnumber = modelnumber;
+    }
+
+    public Integer getPickupid() {
+        return pickupid;
+    }
+
+    public void setPickupid(Integer pickupid) {
+        this.pickupid = pickupid;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+}
+package Entities.Product;
+
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import java.io.Serializable;
+import java.util.Objects;
+
+@Embeddable
+public class ProductId implements Serializable {
+    private static final long serialVersionUID = -7065411362355070039L;
+    @Column(name = "isbn", nullable = false, length = 50)
+    private String isbn;
+
+    @Column(name = "modelnumber", nullable = false, length = 50)
+    private String modelnumber;
+
+    public String getIsbn() {
+        return isbn;
+    }
+
+    public void setIsbn(String isbn) {
+        this.isbn = isbn;
+    }
+
+    public String getModelnumber() {
+        return modelnumber;
+    }
+
+    public void setModelnumber(String modelnumber) {
+        this.modelnumber = modelnumber;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ProductId entity = (ProductId) o;
+        return Objects.equals(this.modelnumber, entity.modelnumber) &&
+                Objects.equals(this.isbn, entity.isbn);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(modelnumber, isbn);
+    }
+
+}
+package Entities.Product;
+
+import javax.persistence.*;
+
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public abstract class Product {
+    @EmbeddedId
+    private ProductId id;
+
+    @Column(name = "productid", nullable = false)
+    private Integer productid;
+
+    // Getters and Setters
+    public ProductId getId() {
+        return id;
+    }
+
+    public void setId(ProductId id) {
+        this.id = id;
+    }
+
+    public Integer getProductid() {
+        return productid;
+    }
+
+    public void setProductid(Integer productid) {
+        this.productid = productid;
+    }
+}
+package Entities.Store;
+
+import Entities.Product.Product;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.ManyToMany;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "store")
+public class Store {
+    @Id
+    @Column(name = "location", nullable = false, length = 50)
+    private String location;
+
+    @Column(name = "storeid", nullable = false)
+    private Integer storeid;
+
+    @ManyToMany(mappedBy = "stores")
+    private Set<Product> products = new HashSet<>();
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public Integer getStoreid() {
+        return storeid;
+    }
+
+    public void setStoreid(Integer storeid) {
+        this.storeid = storeid;
+    }
+
+}
+package Entities.User;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "customeruser")
+@AttributeOverrides({
+        @AttributeOverride(name = "id.nickname", column = @Column(name = "customer_nickname")),
+        @AttributeOverride(name = "id.email", column = @Column(name = "customer_email"))
+})
+public class CustomerUser extends User {
+    @Column(name = "customerid", nullable = false)
+    private Integer customerid;
+
+    @Column(name = "cookies")
+    private Integer cookies;
+
+    @Column(name = "premiumstatus")
+    private Boolean premiumstatus;
+
+    public Integer getCustomerid() {
+        return customerid;
+    }
+
+    public void setCustomerid(Integer customerid) {
+        this.customerid = customerid;
+    }
+
+    public Integer getCookies() {
+        return cookies;
+    }
+
+    public void setCookies(Integer cookies) {
+        this.cookies = cookies;
+    }
+
+    public Boolean getPremiumstatus() {
+        return premiumstatus;
+    }
+
+    public void setPremiumstatus(Boolean premiumstatus) {
+        this.premiumstatus = premiumstatus;
+    }
+}
+package Entities.User;
+
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import java.io.Serializable;
+import java.util.Objects;
+
+@Embeddable
+public class PrivateinfoId implements Serializable {
+    private static final long serialVersionUID = 1820287446345463706L;
+    @Column(name = "usernickname", nullable = false, length = 50)
+    private String usernickname;
+
+    @Column(name = "usermail", nullable = false, length = 50)
+    private String usermail;
+
+    @Column(name = "fullname", nullable = false, length = 50)
+    private String fullname;
+
+    @Column(name = "street", nullable = false, length = 50)
+    private String street;
+
+    @Column(name = "city", nullable = false, length = 50)
+    private String city;
+
+    @Column(name = "zip", nullable = false, length = 50)
+    private String zip;
+
+    @Column(name = "phonenumber", nullable = false, length = 12)
+    private String phonenumber;
+
+    public String getUsernickname() {
+        return usernickname;
+    }
+
+    public void setUsernickname(String usernickname) {
+        this.usernickname = usernickname;
+    }
+
+    public String getUsermail() {
+        return usermail;
+    }
+
+    public void setUsermail(String usermail) {
+        this.usermail = usermail;
+    }
+
+    public String getFullname() {
+        return fullname;
+    }
+
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
+    }
+
+    public String getStreet() {
+        return street;
+    }
+
+    public void setStreet(String street) {
+        this.street = street;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getZip() {
+        return zip;
+    }
+
+    public void setZip(String zip) {
+        this.zip = zip;
+    }
+
+    public String getPhonenumber() {
+        return phonenumber;
+    }
+
+    public void setPhonenumber(String phonenumber) {
+        this.phonenumber = phonenumber;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PrivateinfoId entity = (PrivateinfoId) o;
+        return Objects.equals(this.zip, entity.zip) &&
+                Objects.equals(this.city, entity.city) &&
+                Objects.equals(this.street, entity.street) &&
+                Objects.equals(this.phonenumber, entity.phonenumber) &&
+                Objects.equals(this.usermail, entity.usermail) &&
+                Objects.equals(this.fullname, entity.fullname) &&
+                Objects.equals(this.usernickname, entity.usernickname);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(zip, city, street, phonenumber, usermail, fullname, usernickname);
+    }
+
+}
+package Entities.User;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "privateinfo")
+public class Privateinfo {
+    @EmbeddedId
+    private PrivateinfoId id;
+
+    @MapsId("id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private User users;
+
+    @Column(name = "homenumber", length = 50)
+    private String homenumber;
+
+    @Column(name = "password", length = 50)
+    private String password;
+
+    public PrivateinfoId getId() {
+        return id;
+    }
+
+    public void setId(PrivateinfoId id) {
+        this.id = id;
+    }
+
+    public User getUsers() {
+        return users;
+    }
+
+    public void setUsers(User users) {
+        this.users = users;
+    }
+
+    public String getHomenumber() {
+        return homenumber;
+    }
+
+    public void setHomenumber(String homenumber) {
+        this.homenumber = homenumber;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+}
+package Entities.User;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "superiority")
+public class Superiority {
+    @Id
+    @Column(name = "superiorityid", nullable = false)
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "superiorid", referencedColumnName = "workerid")
+    private WorkerUser superiorid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "underlingid", referencedColumnName = "workerid")
+    private WorkerUser underlingid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "issuperior", referencedColumnName = "personalidentificationnumber")
+    private WorkerUser issuperior;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "isunderling", referencedColumnName = "personalidentificationnumber")
+    private WorkerUser isunderling;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public WorkerUser getSuperiorid() {
+        return superiorid;
+    }
+
+    public void setSuperiorid(WorkerUser superiorid) {
+        this.superiorid = superiorid;
+    }
+
+    public WorkerUser getUnderlingid() {
+        return underlingid;
+    }
+
+    public void setUnderlingid(WorkerUser underlingid) {
+        this.underlingid = underlingid;
+    }
+
+    public WorkerUser getIssuperior() {
+        return issuperior;
+    }
+
+    public void setIssuperior(WorkerUser issuperior) {
+        this.issuperior = issuperior;
+    }
+
+    public WorkerUser getIsunderling() {
+        return isunderling;
+    }
+
+    public void setIsunderling(WorkerUser isunderling) {
+        this.isunderling = isunderling;
+    }
+
+}
+package Entities.User;
+
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Objects;
+
+@Embeddable
+public class UserId implements Serializable {
+    @Serial
+    private static final long serialVersionUID = -263449651575510920L;
+
+    @Column(name = "nickname", nullable = false, length = 50)
+    private String nickname;
+
+    @Column(name = "email", nullable = false, length = 50)
+    private String email;
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserId entity = (UserId) o;
+        return Objects.equals(this.nickname, entity.nickname) &&
+                Objects.equals(this.email, entity.email);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nickname, email);
+    }
+}
+package Entities.User;
+
+import javax.persistence.*;
+
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Table(name = "users")
+public class User {
+    @EmbeddedId
+    private UserId id;
+
+    @Column(name = "userid", nullable = false)
+    private Integer userid;
+
+    public UserId getId() {
+        return id;
+    }
+
+    public void setId(UserId id) {
+        this.id = id;
+    }
+
+    public Integer getUserid() {
+        return userid;
+    }
+
+    public void setUserid(Integer userid) {
+        this.userid = userid;
+    }
+
+}
+package Entities.User;
+
+import Entities.Store.Store;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "workeruser")
+@AttributeOverrides({
+        @AttributeOverride(name = "id.nickname", column = @Column(name = "worker_nickname")),
+        @AttributeOverride(name = "id.email", column = @Column(name = "worker_email"))
+})
+public class WorkerUser extends User {
+    @Column(name = "workerid", nullable = false)
+    private Integer workerid;
+
+    @Column(name = "personalidentificationnumber", nullable = false, length = 50)
+    private String personalidentificationnumber;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location")
+    private Store location;
+
+    public Integer getWorkerid() {
+        return workerid;
+    }
+
+    public void setWorkerid(Integer workerid) {
+        this.workerid = workerid;
+    }
+
+    public String getPersonalidentificationnumber() {
+        return personalidentificationnumber;
+    }
+
+    public void setPersonalidentificationnumber(String personalidentificationnumber) {
+        this.personalidentificationnumber = personalidentificationnumber;
+    }
+
+    public Store getLocation() {
+        return location;
+    }
+
+    public void setLocation(Store location) {
+        this.location = location;
+    }
+}
+
