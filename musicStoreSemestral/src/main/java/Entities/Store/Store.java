@@ -2,11 +2,7 @@ package Entities.Store;
 
 import Entities.Product.Product;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.ManyToMany;
+import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 

@@ -1,6 +1,6 @@
 package Entities.Product;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "instrumentpickup")

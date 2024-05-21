@@ -1,12 +1,12 @@
 package Entities.Product;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "pasystemproduct")
 @AttributeOverrides({
-        @AttributeOverride(name = "id.isbn", column = @Column(name = "pasystem_isbn")),
-        @AttributeOverride(name = "id.modelnumber", column = @Column(name = "pasystem_modelnumber"))
+        @AttributeOverride(name = "id.isbn", column = @Column(name = "isbn")),
+        @AttributeOverride(name = "id.modelnumber", column = @Column(name = "modelnumber"))
 })
 public class PASystemProduct extends Product {
     @Column(name = "systemid", nullable = false)

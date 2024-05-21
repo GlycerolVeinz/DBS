@@ -1,12 +1,14 @@
 package Entities.User;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.*;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
 public class PrivateinfoId implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1820287446345463706L;
     @Column(name = "usernickname", nullable = false, length = 50)
     private String usernickname;

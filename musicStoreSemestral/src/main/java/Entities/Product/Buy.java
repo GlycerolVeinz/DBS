@@ -2,7 +2,7 @@ package Entities.Product;
 
 import Entities.User.CustomerUser;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "buys")

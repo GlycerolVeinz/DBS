@@ -2,7 +2,7 @@ package Entities.User;
 
 import Entities.Store.Store;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "workeruser")
