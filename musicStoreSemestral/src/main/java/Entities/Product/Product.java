@@ -18,7 +18,10 @@ public abstract class Product {
     @ManyToMany
     @JoinTable(
             name = "product_store",
-            joinColumns = {@JoinColumn(name = "product_id")},
+            joinColumns = {
+                    @JoinColumn(name = "product_isbn", referencedColumnName = "isbn"),
+                    @JoinColumn(name = "product_modelnumber", referencedColumnName = "modelnumber")
+            },
             inverseJoinColumns = {@JoinColumn(name = "store_id")}
     )
     private Set<Store> stores = new HashSet<>();

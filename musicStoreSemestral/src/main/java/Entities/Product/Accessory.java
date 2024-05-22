@@ -16,7 +16,10 @@ public class Accessory {
     private String type;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comeswith")
+    @JoinColumns({
+            @JoinColumn(name = "instrument_isbn", referencedColumnName = "isbn"),
+            @JoinColumn(name = "instrument_modelnumber", referencedColumnName = "modelnumber")
+    })
     private InstrumentProduct comeswith;
 
     public String getIsbn() {

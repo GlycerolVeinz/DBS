@@ -1,6 +1,225 @@
+public class AppShowcase {
+    public static void main(String[] args) {
+//        TODO demonstrate some java app functionalities with DB:
+
+    }
+}
+package DAOLayer;
+
+
+import jakarta.persistence.EntityManager;
+
+import java.util.List;
+
+public interface GenericDAOInterface<T, ID> {
+    T findById(ID id);
+    List<T> findAll();
+    boolean save(T entity);
+    boolean update(T entity);
+    boolean delete(T entity);
+    String getEntityClassName();
+}
+package DAOLayer;
+
+import jakarta.persistence.EntityManager;
+
+import java.util.List;
+
+public class GenericDAO<T, ID> implements GenericDAOInterface<T, ID> {
+    protected final Class<T> entityClass;
+    protected final EntityManager entityManager;
+
+    public GenericDAO(Class<T> entityClass, EntityManager entityManager) {
+        this.entityClass = entityClass;
+        this.entityManager = entityManager;
+    }
+
+    @Override
+    public T findById(ID id) {
+        return entityManager.find(entityClass, id);
+    }
+
+    @Override
+    public List<T> findAll() {
+        return entityManager.createQuery("FROM " + entityClass.getSimpleName(), entityClass).getResultList();
+    }
+
+    public boolean save(T entity) {
+        boolean result;
+        try {
+            entityManager.getTransaction().begin();
+            entityManager.persist(entity);
+            entityManager.getTransaction().commit();
+            result = true;
+        } catch (Exception e) {
+            entityManager.getTransaction().rollback();
+            result = false;
+        }
+
+        return result;
+    }
+
+    public boolean update(T entity) {
+        boolean result;
+        try {
+            entityManager.getTransaction().begin();
+            entityManager.merge(entity);
+            entityManager.getTransaction().commit();
+            result = true;
+        } catch (Exception e) {
+            entityManager.getTransaction().rollback();
+            result = false;
+        }
+
+        return result;
+    }
+
+    public boolean delete(T entity) {
+        boolean result;
+        try {
+            entityManager.getTransaction().begin();
+            entityManager.remove(entity);
+            entityManager.getTransaction().commit();
+            result = true;
+        } catch (Exception e) {
+            entityManager.getTransaction().rollback();
+            result = false;
+        }
+
+        return result;
+    }
+
+    public Class<T> getEntityClass() {
+        return entityClass;
+    }
+
+    public EntityManager getEntityManager() {
+        return entityManager;
+    }
+
+    public String getEntityClassName() {
+        return entityClass.getSimpleName();
+    }
+}
+package DAOLayer.Product;
+
+import DAOLayer.GenericDAO;
+import Entities.Product.Accessory;
+import jakarta.persistence.EntityManager;
+
+import java.sql.CallableStatement;
+import java.sql.Connection;
+
+public class AccessoryDAO extends GenericDAO<Accessory, Integer> {
+
+    public AccessoryDAO(Class<Accessory> entityClass, EntityManager entityManager) {
+        super(entityClass, entityManager);
+    }
+
+    public boolean assignAccessoryToProduct(String accessoryISBN, String instrumentModelNumber) {
+        boolean result;
+        try (Connection connection = entityManager.unwrap(Connection.class);
+             CallableStatement callableStatement = connection.prepareCall("{call assign_accessory_to_product(?, ?)}")) {
+            callableStatement.setString(1, accessoryISBN);
+            callableStatement.setString(2, instrumentModelNumber);
+            callableStatement.execute();
+            result = true;
+        } catch (Exception e) {
+            result = false;
+            System.err.println("Failed to assign accessory:" + accessoryISBN +
+                    " to product: " + instrumentModelNumber +
+                    "
+"  + e.getMessage());
+
+        }
+
+        return result;
+    }
+}
+package DAOLayer.User;
+
+import DAOLayer.GenericDAO;
+import Entities.User.PrivateInfo;
+import jakarta.persistence.EntityManager;
+
+import java.sql.CallableStatement;
+import java.sql.Connection;
+
+public class PrivateInfoDAO extends GenericDAO<PrivateInfo, Integer> {
+    public PrivateInfoDAO(EntityManager entityManager) {
+        super(PrivateInfo.class, entityManager);
+    }
+
+    public boolean insertPrivateInfo(String userNickname,
+                                     String userMail,
+                                     String fullName,
+                                     String homeNumber,
+                                     String street,
+                                     String city,
+                                     String zip,
+                                     String phoneNumber,
+                                     String password){
+        boolean result;
+        try (Connection connection = entityManager.unwrap(Connection.class);
+             CallableStatement callableStatement = connection.prepareCall("{call insertprivateinfo(?, ?, ?, ?, ?, ?, ?, ?, ?)}")) {
+            callableStatement.setString(1, userNickname);
+            callableStatement.setString(2, userMail);
+            callableStatement.setString(3, fullName);
+            callableStatement.setString(4, homeNumber);
+            callableStatement.setString(5, street);
+            callableStatement.setString(6, city);
+            callableStatement.setString(7, zip);
+            callableStatement.setString(8, phoneNumber);
+            callableStatement.setString(9, password);
+            callableStatement.execute();
+            result = true;
+        } catch (Exception e) {
+            result = false;
+            System.err.println("Failed to insert private info: " + e.getMessage());
+        }
+
+        return result;
+    }
+}
+package DAOLayer.User;
+
+import DAOLayer.GenericDAO;
+import Entities.User.WorkerUser;
+import jakarta.persistence.EntityManager;
+
+import java.sql.CallableStatement;
+import java.sql.Connection;
+
+public class WorkerUserDAO extends GenericDAO<WorkerUser, Integer> {
+    public WorkerUserDAO(EntityManager entityManager) {
+        super(WorkerUser.class, entityManager);
+    }
+
+    public boolean insertWorkerUser(String personalIdentificationNumber,
+                                    String userNickname,
+                                    String userMail,
+                                    String location) {
+        boolean result;
+
+        try (Connection connection = entityManager.unwrap(Connection.class);
+             CallableStatement callableStatement = connection.prepareCall("{call insert_worker_user(?, ?, ?, ?)}")) {
+            callableStatement.setString(1, personalIdentificationNumber);
+            callableStatement.setString(2, userNickname);
+            callableStatement.setString(3, userMail);
+            callableStatement.setString(4, location);
+            callableStatement.execute();
+            result = true;
+        } catch (Exception e) {
+            result = false;
+            System.err.println("Failed to insert worker user: " + e.getMessage());
+        }
+
+        return result;
+    }
+}
 package Entities.Product;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "accessory")
@@ -56,7 +275,7 @@ package Entities.Product;
 
 import Entities.User.CustomerUser;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "buys")
@@ -98,7 +317,7 @@ public class Buy {
 }
 package Entities.Product;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "instrumentpickup")
@@ -166,13 +385,13 @@ public class Instrumentpickup {
 }
 package Entities.Product;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "instrumentproduct")
 @AttributeOverrides({
-        @AttributeOverride(name = "id.isbn", column = @Column(name = "instrument_isbn")),
-        @AttributeOverride(name = "id.modelnumber", column = @Column(name = "instrument_modelnumber"))
+        @AttributeOverride(name = "id.isbn", column = @Column(name = "isbn")),
+        @AttributeOverride(name = "id.modelnumber", column = @Column(name = "modelnumber")),
 })
 public class InstrumentProduct extends Product {
     @Column(name = "instrumentid", nullable = false)
@@ -211,13 +430,13 @@ public class InstrumentProduct extends Product {
 }
 package Entities.Product;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "pasystemproduct")
 @AttributeOverrides({
-        @AttributeOverride(name = "id.isbn", column = @Column(name = "pasystem_isbn")),
-        @AttributeOverride(name = "id.modelnumber", column = @Column(name = "pasystem_modelnumber"))
+        @AttributeOverride(name = "id.isbn", column = @Column(name = "isbn")),
+        @AttributeOverride(name = "id.modelnumber", column = @Column(name = "modelnumber"))
 })
 public class PASystemProduct extends Product {
     @Column(name = "systemid", nullable = false)
@@ -267,10 +486,7 @@ public class PASystemProduct extends Product {
 }
 package Entities.Product;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "pickup")
@@ -312,13 +528,15 @@ public class Pickup {
 }
 package Entities.Product;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.*;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
 public class ProductId implements Serializable {
+    @Serial
     private static final long serialVersionUID = -7065411362355070039L;
     @Column(name = "isbn", nullable = false, length = 50)
     private String isbn;
@@ -359,7 +577,11 @@ public class ProductId implements Serializable {
 }
 package Entities.Product;
 
-import javax.persistence.*;
+import Entities.Store.Store;
+import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -369,6 +591,22 @@ public abstract class Product {
 
     @Column(name = "productid", nullable = false)
     private Integer productid;
+
+    @ManyToMany
+    @JoinTable(
+            name = "product_store",
+            joinColumns = {@JoinColumn(name = "product_id")},
+            inverseJoinColumns = {@JoinColumn(name = "store_id")}
+    )
+    private Set<Store> stores = new HashSet<>();
+
+    public Set<Store> getStores() {
+        return stores;
+    }
+
+    public void setStores(Set<Store> stores) {
+        this.stores = stores;
+    }
 
     // Getters and Setters
     public ProductId getId() {
@@ -391,11 +629,7 @@ package Entities.Store;
 
 import Entities.Product.Product;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.ManyToMany;
+import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -431,7 +665,7 @@ public class Store {
 }
 package Entities.User;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "customeruser")
@@ -475,13 +709,15 @@ public class CustomerUser extends User {
 }
 package Entities.User;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.*;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
 public class PrivateinfoId implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1820287446345463706L;
     @Column(name = "usernickname", nullable = false, length = 50)
     private String usernickname;
@@ -582,11 +818,11 @@ public class PrivateinfoId implements Serializable {
 }
 package Entities.User;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "privateinfo")
-public class Privateinfo {
+public class PrivateInfo {
     @EmbeddedId
     private PrivateinfoId id;
 
@@ -635,7 +871,7 @@ public class Privateinfo {
 }
 package Entities.User;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "superiority")
@@ -703,8 +939,7 @@ public class Superiority {
 }
 package Entities.User;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.*;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
@@ -752,7 +987,7 @@ public class UserId implements Serializable {
 }
 package Entities.User;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -785,13 +1020,13 @@ package Entities.User;
 
 import Entities.Store.Store;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "workeruser")
 @AttributeOverrides({
         @AttributeOverride(name = "id.nickname", column = @Column(name = "worker_nickname")),
-        @AttributeOverride(name = "id.email", column = @Column(name = "worker_email"))
+        @AttributeOverride(name = "id.email", column = @Column(name = "useremail"))
 })
 public class WorkerUser extends User {
     @Column(name = "workerid", nullable = false)
@@ -820,12 +1055,199 @@ public class WorkerUser extends User {
         this.personalidentificationnumber = personalidentificationnumber;
     }
 
-    public Store getLocation() {
+    public Store getStore() {
         return location;
     }
 
-    public void setLocation(Store location) {
+    public void setStore(Store location) {
         this.location = location;
+    }
+}
+package ServiceLayer;
+
+import java.util.Optional;
+
+public interface GenericServiceInterface<T,ID> {
+    Optional<T> findById(ID id);
+    boolean save(T entity);
+    boolean update(T entity);
+    boolean delete(T entity);
+}
+package ServiceLayer;
+
+import DAOLayer.GenericDAO;
+import DAOLayer.GenericDAOInterface;
+
+import java.util.Optional;
+
+public class GenericService<T,ID> implements GenericServiceInterface<T,ID> {
+    protected final GenericDAOInterface<T,ID> dao;
+
+    public GenericService(GenericDAOInterface<T, ID> dao) {
+        this.dao = dao;
+    }
+
+    @Override
+    public Optional<T> findById(ID id) {
+        Optional<T> entity = Optional.ofNullable(dao.findById(id));
+        if (entity.isEmpty()){
+            System.err.println("Entity not found with id: " + id
+                    + "
+in table: " + dao.getEntityClassName()
+                    + "
+(try checking all of the ids in the table)");
+        }
+
+        return entity;
+    }
+
+    @Override
+    public boolean save(T entity) {
+        boolean isActionSuccessful = dao.save(entity);
+        if (!isActionSuccessful){
+            System.err.println("Error saving entity: " + entity.toString());
+        }
+        return isActionSuccessful;
+    }
+
+    @Override
+    public boolean update(T entity) {
+        boolean isActionSuccessful = dao.update(entity);
+        if (!isActionSuccessful){
+            System.err.println("Error updating entity: " + entity.toString());
+        }
+        return isActionSuccessful;
+    }
+
+    @Override
+    public boolean delete(T entity) {
+        boolean isActionSuccessful = dao.delete(entity);
+        if (!isActionSuccessful){
+            System.err.println("Error deleting entity: " + entity.toString());
+        }
+        return isActionSuccessful;
+    }
+
+    public GenericDAOInterface<T,ID> getDAO() {
+        return dao;
+    }
+}
+package ServiceLayer.User;
+
+import DAOLayer.GenericDAOInterface;
+import DAOLayer.User.PrivateInfoDAO;
+import Entities.User.PrivateInfo;
+import ServiceLayer.GenericService;
+
+public class PrivateInfoService extends GenericService<PrivateInfo, Integer> {
+    PrivateInfoDAO privateInfoDAO = null;
+
+    public PrivateInfoService(GenericDAOInterface<PrivateInfo, Integer> dao) {
+        super(dao);
+        if (!(dao instanceof PrivateInfoDAO))
+            throw new IllegalArgumentException("PrivateInfoService should be constructed with a PrivateInfoDAO");
+        else {
+            this.privateInfoDAO = (PrivateInfoDAO) dao;
+        }
+    }
+
+    public boolean insertPrivateInfo(PrivateInfo privateInfo) {
+        return privateInfoDAO.insertPrivateInfo(
+                privateInfo.getId().getUsernickname(),
+                privateInfo.getId().getUsermail(),
+                privateInfo.getId().getFullname(),
+                privateInfo.getHomenumber(),
+                privateInfo.getId().getStreet(),
+                privateInfo.getId().getCity(),
+                privateInfo.getId().getZip(),
+                privateInfo.getId().getPhonenumber(),
+                privateInfo.getPassword());
+    }
+
+    public boolean insertPrivateInfo(String userNickname,
+                                     String userMail,
+                                     String fullName,
+                                     String homeNumber,
+                                     String street,
+                                     String city,
+                                     String zip,
+                                     String phoneNumber,
+                                     String password) {
+        return privateInfoDAO.insertPrivateInfo(userNickname, userMail, fullName, homeNumber, street, city, zip, phoneNumber, password);
+    }
+
+
+}
+package ServiceLayer.User;
+
+import DAOLayer.GenericDAO;
+import DAOLayer.GenericDAOInterface;
+import DAOLayer.User.WorkerUserDAO;
+import Entities.User.WorkerUser;
+import ServiceLayer.GenericService;
+
+import java.util.List;
+
+public class WorkerUserService extends GenericService<WorkerUser, Integer> {
+    private WorkerUserDAO workerUserDAO = null;
+
+    public WorkerUserService(GenericDAOInterface<WorkerUser, Integer> dao) {
+        super(dao);
+        if (!(dao instanceof WorkerUserDAO))
+            throw new IllegalArgumentException("WorkerUserService should be constructed with a WorkerUserDAO");
+        else {
+            this.workerUserDAO = (WorkerUserDAO) dao;
+        }
+    }
+
+    public void setWorkerUserDAO(WorkerUserDAO workerUserDAO) {
+        this.workerUserDAO = workerUserDAO;
+    }
+
+    public WorkerUserDAO getWorkerUserDAO() {
+        return workerUserDAO;
+    }
+
+    public boolean insertWorkerUser(WorkerUser workerUser) {
+        if (workerUserDAO == null)
+            throw new IllegalArgumentException("WorkerUserDAO is not set, you should have listened to the constructor");
+        return workerUserDAO.insertWorkerUser(
+                workerUser.getPersonalidentificationnumber(),
+                workerUser.getId().getNickname(),
+                workerUser.getId().getEmail(),
+                workerUser.getStore().getLocation());
+    }
+
+    public boolean insertWorkerUser(String personalIdentificationNumber,
+                                    String userNickname,
+                                    String userMail,
+                                    String location) {
+        if (workerUserDAO == null)
+            throw new IllegalArgumentException("WorkerUserDAO is not set, you should have listened to the constructor");
+        return workerUserDAO.insertWorkerUser(personalIdentificationNumber, userNickname, userMail, location);
+    }
+
+    public boolean insertWorkerUsers(List<WorkerUser> workerUsers){
+        if (workerUserDAO == null)
+            throw new IllegalArgumentException("WorkerUserDAO is not set, you should have listened to the constructor");
+
+        boolean result = true;
+        for (WorkerUser workerUser : workerUsers) {
+            boolean current = workerUserDAO.insertWorkerUser(
+                    workerUser.getPersonalidentificationnumber(),
+                    workerUser.getId().getNickname(),
+                    workerUser.getId().getEmail(),
+                    workerUser.getStore().getLocation());
+            if (!current)
+                System.out.println("Failed to insert worker user: " +
+                                workerUser.getId().getNickname() + " " +
+                                workerUser.getId().getEmail() + " " +
+                                workerUser.getStore().getLocation());
+
+            result = result && current;
+        }
+
+        return result;
     }
 }
 
