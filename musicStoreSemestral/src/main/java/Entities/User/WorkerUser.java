@@ -37,11 +37,11 @@ public class WorkerUser extends User {
         this.personalidentificationnumber = personalidentificationnumber;
     }
 
-    public Store getLocation() {
+    public Store getStore() {
         return location;
     }
 
-    public void setLocation(Store location) {
+    public void setStore(Store location) {
         this.location = location;
     }
 }
