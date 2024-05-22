@@ -1,6 +1,7 @@
 package ServiceLayer.User;
 
 import DAOLayer.GenericDAO;
+import DAOLayer.GenericDAOInterface;
 import DAOLayer.User.WorkerUserDAO;
 import Entities.User.WorkerUser;
 import ServiceLayer.GenericService;
@@ -10,7 +11,7 @@ import java.util.List;
 public class WorkerUserService extends GenericService<WorkerUser, Integer> {
     private WorkerUserDAO workerUserDAO = null;
 
-    public WorkerUserService(GenericDAO<WorkerUser, Integer> dao) {
+    public WorkerUserService(GenericDAOInterface<WorkerUser, Integer> dao) {
         super(dao);
         if (!(dao instanceof WorkerUserDAO))
             throw new IllegalArgumentException("WorkerUserService should be constructed with a WorkerUserDAO");

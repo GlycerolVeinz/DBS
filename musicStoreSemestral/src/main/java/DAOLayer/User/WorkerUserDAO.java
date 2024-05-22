@@ -28,6 +28,7 @@ public class WorkerUserDAO extends GenericDAO<WorkerUser, Integer> {
             result = true;
         } catch (Exception e) {
             result = false;
+            System.err.println("Failed to insert worker user: " + e.getMessage());
         }
 
         return result;

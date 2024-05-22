@@ -1,13 +1,14 @@
 package ServiceLayer;
 
 import DAOLayer.GenericDAO;
+import DAOLayer.GenericDAOInterface;
 
 import java.util.Optional;
 
 public class GenericService<T,ID> implements GenericServiceInterface<T,ID> {
-    protected final GenericDAO<T,ID> dao;
+    protected final GenericDAOInterface<T,ID> dao;
 
-    public GenericService(GenericDAO<T, ID> dao) {
+    public GenericService(GenericDAOInterface<T, ID> dao) {
         this.dao = dao;
     }
 
@@ -16,7 +17,7 @@ public class GenericService<T,ID> implements GenericServiceInterface<T,ID> {
         Optional<T> entity = Optional.ofNullable(dao.findById(id));
         if (entity.isEmpty()){
             System.err.println("Entity not found with id: " + id
-                    + "\nin table: " + dao.getEntityClass().getSimpleName()
+                    + "\nin table: " + dao.getEntityClassName()
                     + "\n(try checking all of the ids in the table)");
         }
 
@@ -50,7 +51,7 @@ public class GenericService<T,ID> implements GenericServiceInterface<T,ID> {
         return isActionSuccessful;
     }
 
-    public GenericDAO<T,ID> getDAO() {
+    public GenericDAOInterface<T,ID> getDAO() {
         return dao;
     }
 }
