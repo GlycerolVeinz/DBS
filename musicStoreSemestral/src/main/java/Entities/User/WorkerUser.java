@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 @Table(name = "workeruser")
 @AttributeOverrides({
         @AttributeOverride(name = "id.nickname", column = @Column(name = "worker_nickname")),
-        @AttributeOverride(name = "id.email", column = @Column(name = "worker_email"))
+        @AttributeOverride(name = "id.email", column = @Column(name = "useremail"))
 })
 public class WorkerUser extends User {
     @Column(name = "workerid", nullable = false)
