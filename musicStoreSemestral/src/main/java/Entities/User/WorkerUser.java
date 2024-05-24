@@ -1,16 +1,27 @@
 package Entities.User;
 
 import Entities.Store.Store;
-
 import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "workeruser")
-@AttributeOverrides({
-        @AttributeOverride(name = "id.nickname", column = @Column(name = "worker_nickname")),
-        @AttributeOverride(name = "id.email", column = @Column(name = "useremail"))
-})
-public class WorkerUser extends User {
+public class WorkerUser {
+    @EmbeddedId
+    private WorkeruserId id;
+
+    @MapsId("id")
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumns({
+            @JoinColumn(name = "usernickname", referencedColumnName = "nickname", nullable = false),
+            @JoinColumn(name = "usermail", referencedColumnName = "email", nullable = false)
+    })
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private User users;
+
+    @ColumnDefault("nextval('workeruser_workerid_seq'::regclass)")
     @Column(name = "workerid", nullable = false)
     private Integer workerid;
 
@@ -18,8 +29,25 @@ public class WorkerUser extends User {
     private String personalidentificationnumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "location")
-    private Store location;
+    private Store store;
+
+    public WorkeruserId getId() {
+        return id;
+    }
+
+    public void setId(WorkeruserId id) {
+        this.id = id;
+    }
+
+    public User getUsers() {
+        return users;
+    }
+
+    public void setUsers(User users) {
+        this.users = users;
+    }
 
     public Integer getWorkerid() {
         return workerid;
@@ -38,10 +66,11 @@ public class WorkerUser extends User {
     }
 
     public Store getStore() {
-        return location;
+        return store;
     }
 
     public void setStore(Store location) {
-        this.location = location;
+        this.store = location;
     }
+
 }

@@ -33,8 +33,8 @@ public class WorkerUserService extends GenericService<WorkerUser, Integer> {
             throw new IllegalArgumentException("WorkerUserDAO is not set, you should have listened to the constructor");
         return workerUserDAO.insertWorkerUser(
                 workerUser.getPersonalidentificationnumber(),
-                workerUser.getId().getNickname(),
-                workerUser.getId().getEmail(),
+                workerUser.getId().getUsernickname(),
+                workerUser.getId().getUsermail(),
                 workerUser.getStore().getLocation());
     }
 
@@ -55,13 +55,13 @@ public class WorkerUserService extends GenericService<WorkerUser, Integer> {
         for (WorkerUser workerUser : workerUsers) {
             boolean current = workerUserDAO.insertWorkerUser(
                     workerUser.getPersonalidentificationnumber(),
-                    workerUser.getId().getNickname(),
-                    workerUser.getId().getEmail(),
+                    workerUser.getId().getUsernickname(),
+                    workerUser.getId().getUsermail(),
                     workerUser.getStore().getLocation());
             if (!current)
                 System.out.println("Failed to insert worker user: " +
-                                workerUser.getId().getNickname() + " " +
-                                workerUser.getId().getEmail() + " " +
+                                workerUser.getId().getUsernickname() + " " +
+                                workerUser.getId().getUsermail() + " " +
                                 workerUser.getStore().getLocation());
 
             result = result && current;

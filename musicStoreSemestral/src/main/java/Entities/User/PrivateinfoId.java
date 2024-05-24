@@ -10,6 +10,7 @@ import java.util.Objects;
 public class PrivateinfoId implements Serializable {
     @Serial
     private static final long serialVersionUID = 1820287446345463706L;
+
     @Column(name = "usernickname", nullable = false, length = 50)
     private String usernickname;
 

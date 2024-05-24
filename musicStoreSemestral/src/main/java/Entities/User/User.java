@@ -3,7 +3,6 @@ package Entities.User;
 import jakarta.persistence.*;
 
 @Entity
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @Table(name = "users")
 public class User {
     @EmbeddedId

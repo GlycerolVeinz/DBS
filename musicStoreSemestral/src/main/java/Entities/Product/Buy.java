@@ -12,9 +12,17 @@ public class Buy {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumns({
+            @JoinColumn(name = "isbn", referencedColumnName = "isbn"),
+            @JoinColumn(name = "modelnumber", referencedColumnName = "modelnumber")
+    })
     private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumns({
+            @JoinColumn(name = "usernickname", referencedColumnName = "usernickname"),
+            @JoinColumn(name = "usermail", referencedColumnName = "usermail")
+    })
     private CustomerUser customeruser;
 
     public Integer getId() {

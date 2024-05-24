@@ -3,6 +3,7 @@ package DAOLayer.Product;
 import DAOLayer.GenericDAO;
 import Entities.Product.Accessory;
 import jakarta.persistence.EntityManager;
+import org.hibernate.Session;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -21,8 +22,10 @@ public class AccessoryDAO extends GenericDAO<Accessory, Integer> {
             callableStatement.setString(2, instrumentModelNumber);
             callableStatement.execute();
             result = true;
+
         } catch (Exception e) {
             result = false;
+            System.err.println("--------------------");
             System.err.println("Failed to assign accessory:" + accessoryISBN +
                     " to product: " + instrumentModelNumber +
                     "\n"  + e.getMessage());
