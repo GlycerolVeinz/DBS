@@ -1,0 +1,938 @@
+package DAOLayer;
+
+import java.util.List;
+
+public interface GenericDAOInterface<T,ID> {
+    T findById(ID id);
+    List<T> findAll();
+    boolean save(T entity);
+    boolean update(T entity);
+    boolean delete(T entity);
+}
+package DAOLayer;
+
+import jakarta.persistence.EntityManager;
+
+import java.util.List;
+
+public class GenericDAO<T,ID> implements GenericDAOInterface<T,ID>{
+    protected final Class<T> entityClass;
+    protected final EntityManager entityManager;
+
+    public GenericDAO(Class<T> entityClass, EntityManager entityManager) {
+        this.entityClass = entityClass;
+        this.entityManager = entityManager;
+    }
+
+    @Override
+    public T findById(ID id) {
+        return entityManager.find(entityClass, id);
+    }
+
+    @Override
+    public List<T> findAll() {
+        return entityManager.createQuery("FROM " + entityClass.getSimpleName(), entityClass).getResultList();
+    }
+
+    @Override
+    public boolean save(T entity) {
+        boolean result;
+        try {
+            entityManager.getTransaction().begin();
+            entityManager.persist(entity);
+            entityManager.getTransaction().commit();
+            result = true;
+        } catch (Exception e) {
+            entityManager.getTransaction().rollback();
+            result = false;
+        }
+
+        return result;
+    }
+
+    @Override
+    public boolean update(T entity) {
+        boolean result;
+        try {
+            entityManager.getTransaction().begin();
+            entityManager.merge(entity);
+            entityManager.getTransaction().commit();
+            result = true;
+        } catch (Exception e) {
+            entityManager.getTransaction().rollback();
+            result = false;
+        }
+
+        return result;
+    }
+
+    @Override
+    public boolean delete(T entity) {
+        boolean result;
+        try {
+            entityManager.getTransaction().begin();
+            entityManager.remove(entity);
+            entityManager.getTransaction().commit();
+            result = true;
+        } catch (Exception e) {
+            entityManager.getTransaction().rollback();
+            result = false;
+        }
+
+        return result;
+    }
+
+}
+package Entities.Product;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnDefault;
+
+@Entity
+@Table(name = "accessory")
+public class Accessory {
+    @Id
+    @ColumnDefault("nextval('accessory_accessoryid_seq'::regclass)")
+    @Column(name = "accessoryid", nullable = false)
+    private Integer id;
+
+    @Column(name = "type", length = 50)
+    private String type;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comeswith")
+    private Instrumentproduct comeswith;
+
+    @Column(name = "isbn", length = 50)
+    private String isbn;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Instrumentproduct getComeswith() {
+        return comeswith;
+    }
+
+    public void setComeswith(Instrumentproduct comeswith) {
+        this.comeswith = comeswith;
+    }
+
+    public String getIsbn() {
+        return isbn;
+    }
+
+    public void setIsbn(String isbn) {
+        this.isbn = isbn;
+    }
+
+}
+package Entities.Product;
+
+import Entities.User.Customeruser;
+import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+@Entity
+@Table(name = "buys")
+public class Buy {
+    @Id
+    @ColumnDefault("nextval('buys_purchaseid_seq'::regclass)")
+    @Column(name = "purchaseid", nullable = false)
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "productid", nullable = false)
+    private Product productid;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "customerid", nullable = false)
+    private Customeruser customerid;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Product getProductid() {
+        return productid;
+    }
+
+    public void setProductid(Product productid) {
+        this.productid = productid;
+    }
+
+    public Customeruser getCustomerid() {
+        return customerid;
+    }
+
+    public void setCustomerid(Customeruser customerid) {
+        this.customerid = customerid;
+    }
+
+}
+package Entities.Product;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import org.hibernate.Hibernate;
+
+import java.io.Serializable;
+import java.util.Objects;
+
+@Embeddable
+public class IncludeId implements Serializable {
+    private static final long serialVersionUID = 1248446601425078427L;
+    @Column(name = "productid", nullable = false)
+    private Integer productid;
+
+    @Column(name = "accessoryid", nullable = false)
+    private Integer accessoryid;
+
+    public Integer getProductid() {
+        return productid;
+    }
+
+    public void setProductid(Integer productid) {
+        this.productid = productid;
+    }
+
+    public Integer getAccessoryid() {
+        return accessoryid;
+    }
+
+    public void setAccessoryid(Integer accessoryid) {
+        this.accessoryid = accessoryid;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        IncludeId entity = (IncludeId) o;
+        return Objects.equals(this.productid, entity.productid) &&
+                Objects.equals(this.accessoryid, entity.accessoryid);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(productid, accessoryid);
+    }
+
+}
+package Entities.Product;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+@Entity
+@Table(name = "includes")
+public class Include {
+    @EmbeddedId
+    private IncludeId id;
+
+    @MapsId("productid")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "productid", nullable = false)
+    private Instrumentproduct productid;
+
+    @MapsId("accessoryid")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "accessoryid", nullable = false)
+    private Accessory accessoryid;
+
+    public IncludeId getId() {
+        return id;
+    }
+
+    public void setId(IncludeId id) {
+        this.id = id;
+    }
+
+    public Instrumentproduct getProductid() {
+        return productid;
+    }
+
+    public void setProductid(Instrumentproduct productid) {
+        this.productid = productid;
+    }
+
+    public Accessory getAccessoryid() {
+        return accessoryid;
+    }
+
+    public void setAccessoryid(Accessory accessoryid) {
+        this.accessoryid = accessoryid;
+    }
+
+}
+package Entities.Product;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+@Entity
+@Table(name = "instrumentpickup")
+public class Instrumentpickup {
+    @Id
+    @ColumnDefault("nextval('instrumentpickup_installedonid_seq'::regclass)")
+    @Column(name = "installedonid", nullable = false)
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "instrumentid", nullable = false)
+    private Instrumentproduct instrumentid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "pickupid")
+    private Pickup pickupid;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Instrumentproduct getInstrumentid() {
+        return instrumentid;
+    }
+
+    public void setInstrumentid(Instrumentproduct instrumentid) {
+        this.instrumentid = instrumentid;
+    }
+
+    public Pickup getPickupid() {
+        return pickupid;
+    }
+
+    public void setPickupid(Pickup pickupid) {
+        this.pickupid = pickupid;
+    }
+
+}
+package Entities.Product;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+@Entity
+@Table(name = "instrumentproduct")
+public class Instrumentproduct {
+    @Id
+    @Column(name = "productid", nullable = false)
+    private Integer id;
+
+    @MapsId
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "productid", nullable = false)
+    private Product product;
+
+    @Column(name = "range", length = 50)
+    private String range;
+
+    @Column(name = "type", length = 50)
+    private String type;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public String getRange() {
+        return range;
+    }
+
+    public void setRange(String range) {
+        this.range = range;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+}
+package Entities.Product;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+@Entity
+@Table(name = "pasystemproduct")
+public class Pasystemproduct {
+    @Id
+    @Column(name = "productid", nullable = false)
+    private Integer id;
+
+    @MapsId
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "productid", nullable = false)
+    private Product product;
+
+    @Column(name = "range", length = 50)
+    private String range;
+
+    @Column(name = "type", length = 50)
+    private String type;
+
+    @Column(name = "resistance", length = 50)
+    private String resistance;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public String getRange() {
+        return range;
+    }
+
+    public void setRange(String range) {
+        this.range = range;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getResistance() {
+        return resistance;
+    }
+
+    public void setResistance(String resistance) {
+        this.resistance = resistance;
+    }
+
+}
+package Entities.Product;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.ColumnDefault;
+
+@Entity
+@Table(name = "pickup")
+public class Pickup {
+    @Id
+    @ColumnDefault("nextval('pickup_pickupid_seq'::regclass)")
+    @Column(name = "pickupid", nullable = false)
+    private Integer id;
+
+    @Column(name = "name", nullable = false, length = 50)
+    private String name;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+}
+package Entities.Product;
+
+import Entities.Store.Store;
+import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+@Entity
+@Table(name = "product")
+public class Product {
+    @Id
+    @ColumnDefault("nextval('product_productid_seq'::regclass)")
+    @Column(name = "productid", nullable = false)
+    private Integer id;
+
+    @Column(name = "isbn", nullable = false, length = 50)
+    private String isbn;
+
+    @Column(name = "modelnumber", nullable = false, length = 50)
+    private String modelnumber;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "location", referencedColumnName = "location")
+    private Store location;
+
+    @Column(name = "price")
+    private Integer price;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getIsbn() {
+        return isbn;
+    }
+
+    public void setIsbn(String isbn) {
+        this.isbn = isbn;
+    }
+
+    public String getModelnumber() {
+        return modelnumber;
+    }
+
+    public void setModelnumber(String modelnumber) {
+        this.modelnumber = modelnumber;
+    }
+
+    public Store getLocation() {
+        return location;
+    }
+
+    public void setLocation(Store location) {
+        this.location = location;
+    }
+
+    public Integer getPrice() {
+        return price;
+    }
+
+    public void setPrice(Integer price) {
+        this.price = price;
+    }
+
+}
+package Entities.Store;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.ColumnDefault;
+
+@Entity
+@Table(name = "store")
+public class Store {
+    @Id
+    @ColumnDefault("nextval('store_storeid_seq'::regclass)")
+    @Column(name = "storeid", nullable = false)
+    private Integer id;
+
+    @Column(name = "location", nullable = false, length = 50)
+    private String location;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+}
+package Entities.User;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+@Entity
+@Table(name = "customeruser")
+public class Customeruser {
+    @Id
+    @Column(name = "userid", nullable = false)
+    private Integer id;
+
+    @MapsId
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "userid", nullable = false)
+    private User users;
+
+    @Column(name = "cookies")
+    private Integer cookies;
+
+    @Column(name = "premiumstatus")
+    private Boolean premiumstatus;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public User getUsers() {
+        return users;
+    }
+
+    public void setUsers(User users) {
+        this.users = users;
+    }
+
+    public Integer getCookies() {
+        return cookies;
+    }
+
+    public void setCookies(Integer cookies) {
+        this.cookies = cookies;
+    }
+
+    public Boolean getPremiumstatus() {
+        return premiumstatus;
+    }
+
+    public void setPremiumstatus(Boolean premiumstatus) {
+        this.premiumstatus = premiumstatus;
+    }
+
+}
+package Entities.User;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+@Entity
+@Table(name = "privateinfo")
+public class Privateinfo {
+    @Id
+    @ColumnDefault("nextval('privateinfo_privateinfoid_seq'::regclass)")
+    @Column(name = "privateinfoid", nullable = false)
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "userid", nullable = false)
+    private User userid;
+
+    @Column(name = "fullname", length = 50)
+    private String fullname;
+
+    @Column(name = "homenumber", length = 50)
+    private String homenumber;
+
+    @Column(name = "street", length = 50)
+    private String street;
+
+    @Column(name = "city", length = 50)
+    private String city;
+
+    @Column(name = "zip", length = 50)
+    private String zip;
+
+    @Column(name = "phonenumber", length = 12)
+    private String phonenumber;
+
+    @Column(name = "password", length = 50)
+    private String password;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public User getUserid() {
+        return userid;
+    }
+
+    public void setUserid(User userid) {
+        this.userid = userid;
+    }
+
+    public String getFullname() {
+        return fullname;
+    }
+
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
+    }
+
+    public String getHomenumber() {
+        return homenumber;
+    }
+
+    public void setHomenumber(String homenumber) {
+        this.homenumber = homenumber;
+    }
+
+    public String getStreet() {
+        return street;
+    }
+
+    public void setStreet(String street) {
+        this.street = street;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getZip() {
+        return zip;
+    }
+
+    public void setZip(String zip) {
+        this.zip = zip;
+    }
+
+    public String getPhonenumber() {
+        return phonenumber;
+    }
+
+    public void setPhonenumber(String phonenumber) {
+        this.phonenumber = phonenumber;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+}
+package Entities.User;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+@Entity
+@Table(name = "superiority")
+public class Superiority {
+    @Id
+    @ColumnDefault("nextval('superiority_superiorityid_seq'::regclass)")
+    @Column(name = "superiorityid", nullable = false)
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "superiorworkerid")
+    private Workeruser superiorworkerid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "underlingworkerid")
+    private Workeruser underlingworkerid;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Workeruser getSuperiorworkerid() {
+        return superiorworkerid;
+    }
+
+    public void setSuperiorworkerid(Workeruser superiorworkerid) {
+        this.superiorworkerid = superiorworkerid;
+    }
+
+    public Workeruser getUnderlingworkerid() {
+        return underlingworkerid;
+    }
+
+    public void setUnderlingworkerid(Workeruser underlingworkerid) {
+        this.underlingworkerid = underlingworkerid;
+    }
+
+}
+package Entities.User;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.ColumnDefault;
+
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @ColumnDefault("nextval('users_userid_seq'::regclass)")
+    @Column(name = "userid", nullable = false)
+    private Integer id;
+
+    @Column(name = "nickname", nullable = false, length = 50)
+    private String nickname;
+
+    @Column(name = "email", nullable = false, length = 50)
+    private String email;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+}
+package Entities.User;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+@Entity
+@Table(name = "workeruser")
+public class Workeruser {
+    @Id
+    @Column(name = "userid", nullable = false)
+    private Integer id;
+
+    @MapsId
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "userid", nullable = false)
+    private User users;
+
+    @Column(name = "personalidentificationnumber", nullable = false, length = 50)
+    private String personalidentificationnumber;
+
+    @Column(name = "location", length = 50)
+    private String location;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public User getUsers() {
+        return users;
+    }
+
+    public void setUsers(User users) {
+        this.users = users;
+    }
+
+    public String getPersonalidentificationnumber() {
+        return personalidentificationnumber;
+    }
+
+    public void setPersonalidentificationnumber(String personalidentificationnumber) {
+        this.personalidentificationnumber = personalidentificationnumber;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+}
+
