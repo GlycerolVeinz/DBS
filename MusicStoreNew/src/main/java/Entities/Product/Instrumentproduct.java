@@ -7,11 +7,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @Entity
 @Table(name = "instrumentproduct")
 @PrimaryKeyJoinColumn(name = "productid")
-public class Instrumentproduct {
-    @Id
-    @Column(name = "productid", nullable = false)
-    private Integer id;
-
+public class Instrumentproduct extends Product {
     @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -23,14 +19,6 @@ public class Instrumentproduct {
 
     @Column(name = "type", length = 50)
     private String type;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public Product getProduct() {
         return product;
@@ -59,7 +47,7 @@ public class Instrumentproduct {
     @Override
     public String toString() {
         return "Instrumentproduct{" +
-                "id=" + id +
+                "id=" + super.getId() +
                 ", product=" + product +
                 ", range='" + range + '\'' +
                 ", type='" + type + '\'' +

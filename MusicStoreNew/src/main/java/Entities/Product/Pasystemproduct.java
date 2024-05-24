@@ -7,11 +7,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @Entity
 @Table(name = "pasystemproduct")
 @Inheritance(strategy = InheritanceType.JOINED)
-public class Pasystemproduct {
-    @Id
-    @Column(name = "productid", nullable = false)
-    private Integer id;
-
+public class Pasystemproduct extends Product{
     @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -26,14 +22,6 @@ public class Pasystemproduct {
 
     @Column(name = "resistance", length = 50)
     private String resistance;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public Product getProduct() {
         return product;

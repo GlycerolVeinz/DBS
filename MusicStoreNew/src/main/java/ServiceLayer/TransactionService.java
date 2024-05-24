@@ -28,7 +28,6 @@ public class TransactionService{
 
         try {
             transaction.begin();
-
 //            Getting customer
             Customeruser customer = customerDAO.findById(customerId);
             if (customer == null) {

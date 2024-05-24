@@ -33,4 +33,11 @@ public class Store {
         this.location = location;
     }
 
+    @Override
+    public String toString() {
+        return "Store{" +
+                "id=" + id +
+                ", location='" + location + '\'' +
+                '}';
+    }
 }

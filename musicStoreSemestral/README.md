@@ -29,107 +29,71 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>RM for DBS</title>
+    <title>Relational Model for Music Store Database</title>
 </head>
-
 <body>
 
-<h1>Relational model for music store database</h1>
+<h1>Relational Model for Music Store Database</h1>
 
 <ul>
-    <li> User (<u>userID</u>, <u>nickname, email</u>)</li>
+    <li>Users (<u>userID</u>, nickname, email)</li>
 </ul>
 
 <ul>
-    <li> PrivateInfo (<u>fullName, homeNumber, street, city, zip, userNickname, userMail, phoneNumber</u>, password)
-        <ul>
-            <li>FK: (userNickname, userMail) ⊆ User(nickname, email)</li>
-        </ul>
-    </li>
+    <li>PrivateInfo (<u>privateInfoID</u>, userID, fullName, homeNumber, street, city, zip, phoneNumber, password)</li>
 </ul>
 
 <ul>
-    <li> WorkerUser (<u>workerId</u>, <u>personalIdentificationNumber</u>, <u>userNickname, userMail</u>, location)
-        <ul>
-            <li>FK: WorkerUser(userNickname, userMail) ⊆ User(nickname, email)</li>
-            <li>FK: WorkerUser(location) ⊆ Store(location)</li>
-        </ul>
-    </li>
-
-    <li> superiority (<u>superiorityId</u>, superiorId, underlingId,<u>isSuperior, isUnderling</u>)
-        <ul>
-            <li>FK: superiority(isSuperior) ⊆ WorkerUser(personalIdentificationNumber)</li>
-            <li>FK: superiority(isUnderling) ⊆ WorkerUser(personalIdentificationNumber)</li>
-            <li>FK: superiority(superiorId) ⊆ WorkerUser(workerId)</li>
-            <li>FK: superiority(underlingId) ⊆ WorkerUser(workerId)</li>
-        </ul>
-    </li>
+    <li>WorkerUser (<u>userID</u>, personalIdentificationNumber, location)</li>
 </ul>
 
 <ul>
-    <li> CustomerUser (<u>customerID</u>, <u>userNickname, userMail</u>, cookies, premiumStatus)
-        <ul>
-            <li>FK: (nickname, email) ⊆ User(nickname, email)</li>
-        </ul>
-    </li>
-
-    <li> buys (<u>purchaseId</u>, <u>ISBN, modelNumber</u>, <u>nickname, email</u>)
-        <ul>
-            <li>FK: buys(ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
-            <li>FK: buys(nickname, email) ⊆ CustomerUser(nickname, email)</li>
-        </ul>
-    </li>
+    <li>CustomerUser (<u>userID</u>, cookies, premiumStatus)</li>
 </ul>
 
 <ul>
-    <li> Store (<u>storeId</u>, <u>location</u>)</li>
+    <li>Superiority (<u>superiorityID</u>, superiorWorkerID, underlingWorkerID)</li>
 </ul>
 
 <ul>
-    <li> Product (<u>productID</u>, <u>ISBN</u>, <u>modelNumber</u>, location)
-        <ul>
-            <li>FK: Product(location) ⊆ Store(location)</li>
-        </ul>
-    </li>
+    <li>Store (<u>storeID</u>, location)</li>
 </ul>
 
 <ul>
-    <li> InstrumentProduct (<u>instrumentId</u>, <u>modelNumber, ISBN</u>, range, type)
-        <ul>
-            <li>FK: InstrumentProduct(ISBN, modelNumber) ⊆ Product(ISBN, modelNumber)</li>
-        </ul>
-    </li>
-
-    <li>Pickup(<u>pickupId</u>, <u>modelNumber</u>, name)</li>
-    
-    <li> InstrumentPickup (<u>installedOnId</u>, instrumentId, pickupID, modelNumber, pickupModelNumber)
-        <ul>
-            <li>FK: InstrumentPickup(modelNumber) ⊆ InstrumentProduct(modelNumber)</li>
-            <li>FK: InstrumentPickup(pickupModelNumber) ⊆ Pickup(modelNumber)</li>
-            <li>FK: InstrumentPickup(instrumentId) ⊆ InstrumentProduct(instrumentId)</li>
-            <li>FK: InstrumentPickup(pickupID) ⊆ Pickup(pickupID)</li>
-        </ul>
-    </li>
+    <li>Product (<u>productID</u>, ISBN, modelNumber, location, price)</li>
 </ul>
 
 <ul>
-    <li> PASystemProduct (<u>systemId</u>, <u>ISBN</u>, range, type, resistance)
-        <ul>
-            <li>FK: PASystemProduct(ISBN) ⊆ Product(ISBN)</li>
-        </ul>
-    </li>
+    <li>InstrumentProduct (<u>productID</u>, range, type)</li>
 </ul>
 
 <ul>
-    <li> Accessory (<u>accessoryId</u>, <u>ISBN</u>, type, comesWith)
-        <ul>
-            <li>FK: Accessory(comesWith) ⊆ InstrumentProduct(modelNumber)</li>
-        </ul>
-    </li>
+    <li>Pickup (<u>pickupID</u>, name)</li>
+</ul>
+
+<ul>
+    <li>InstrumentPickup (<u>installedOnID</u>, instrumentID, pickupID)</li>
+</ul>
+
+<ul>
+    <li>Includes (<u>productID, accessoryID</u>)</li>
+</ul>
+
+<ul>
+    <li>PASystemProduct (<u>productID</u>, range, type, resistance)</li>
+</ul>
+
+<ul>
+    <li>Accessory (<u>accessoryID</u>, type, comesWith, ISBN)</li>
+</ul>
+
+<ul>
+    <li>Buys (<u>purchaseID</u>, productID, userID)</li>
 </ul>
 
 </body>
 </html>
+
 ```
 
 ## Database

@@ -5,10 +5,10 @@ import DAOLayer.User.CustomerUserDAO;
 import Entities.User.Customeruser;
 import ServiceLayer.GenericService;
 
-public class CustomerService extends GenericService {
+public class CustomerService extends GenericService<Customeruser, Integer> {
     CustomerUserDAO customerUserDAO;
 
-    public CustomerService(GenericDAOInterface dao) {
+    public CustomerService(GenericDAOInterface<Customeruser, Integer> dao) {
         super(dao);
         if (dao instanceof CustomerUserDAO) {
             this.customerUserDAO = (CustomerUserDAO) dao;
