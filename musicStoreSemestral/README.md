@@ -801,6 +801,51 @@ DO $$
         END IF;
 
         -- Insert the purchase record
+        INSERT INTO Buys (productid, customerid)
+        VALUES (e_productID, e_customerID)
+        RETURNING purchaseID INTO p_purchaseID;
+
+        -- Update the customer's premium status to TRUE
+        UPDATE CustomerUser SET premiumStatus = TRUE WHERE userid = e_customerID;
+
+        -- Commit the transaction
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            -- Rollback in case of any error
+            ROLLBACK;
+            RAISE;
+    END $$;
+
+
+-- Variables
+DO $$
+    DECLARE
+        p_ISBN VARCHAR := '223456789';         -- Product ISBN
+        p_modelNumber VARCHAR := 'system1';    -- Product model number
+        p_userNickname VARCHAR := 'customer1'; -- Customer nickname
+        p_userMail VARCHAR := 'cus1@seznam.cz';-- Customer email
+        p_purchaseID INTEGER;
+        e_productID INTEGER;
+        e_userID INTEGER;
+        e_customerID INTEGER;
+    BEGIN
+        -- Check if the product exists and get its productID
+        SELECT productID INTO e_productID FROM Product WHERE ISBN = p_ISBN AND modelNumber = p_modelNumber FOR UPDATE;
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Product with ISBN % and model number % does not exist', p_ISBN, p_modelNumber;
+        END IF;
+
+        -- Check if the customer exists and get their userID and customerID
+        SELECT CU.userID, CU.userid INTO e_userID, e_customerID
+        FROM CustomerUser CU
+                 JOIN Users U ON CU.userID = U.userID
+        WHERE U.nickname = p_userNickname AND U.email = p_userMail FOR UPDATE;
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Customer with nickname % and email % does not exist', p_userNickname, p_userMail;
+        END IF;
+
+        -- Insert the purchase record
         INSERT INTO Buys (customerid, productid)
         VALUES (e_customerID, e_productID)
         RETURNING purchaseID INTO p_purchaseID;

@@ -6,6 +6,8 @@ import Entities.Product.Accessory;
 import Entities.Product.Instrumentproduct;
 import ServiceLayer.GenericService;
 
+import java.util.stream.Collectors;
+
 public class AccessoryService extends GenericService<Accessory, Integer> {
     private AccessoryDAO accessoryDAO = null;
 
@@ -20,5 +22,12 @@ public class AccessoryService extends GenericService<Accessory, Integer> {
 
     public boolean assignAccessoryToInstrument(Accessory accessory, Instrumentproduct instrument) {
         return accessoryDAO.assignAccessoryToProduct(accessory.getId() , instrument.getId());
+    }
+
+    public void printAllAccessoryTypesAmmount(){
+        accessoryDAO.findAll().stream()
+                .map(Accessory::getType)
+                .collect(Collectors.toMap(type -> type, type -> 1, Integer::sum))
+                .forEach((type, ammount) -> System.out.println(type + " : " + ammount));
     }
 }

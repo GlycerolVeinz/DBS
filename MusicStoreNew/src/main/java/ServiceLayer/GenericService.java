@@ -2,6 +2,7 @@ package ServiceLayer;
 
 import DAOLayer.GenericDAOInterface;
 
+import java.util.List;
 import java.util.Optional;
 
 public class GenericService<T,ID> implements GenericServiceInterface<T,ID>{
@@ -21,6 +22,15 @@ public class GenericService<T,ID> implements GenericServiceInterface<T,ID>{
         }
 
         return entity;
+    }
+
+    @Override
+    public List<T> findAll() {
+        List<T> entities = dao.findAll();
+        if (entities.isEmpty()){
+            System.err.println("No entities found in table: " + dao.getEntityClassName());
+        }
+        return entities;
     }
 
     @Override
