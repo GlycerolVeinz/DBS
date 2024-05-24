@@ -71,4 +71,12 @@ public class GenericDAO<T,ID> implements GenericDAOInterface<T,ID>{
         return result;
     }
 
+    @Override
+    public String getEntityClassName() {
+        return entityClass.getSimpleName();
+    }
+
+    public EntityManager getEntityManager() {
+        return entityManager;
+    }
 }

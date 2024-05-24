@@ -1,5 +1,7 @@
 package DAOLayer;
 
+import jakarta.persistence.EntityManager;
+
 import java.util.List;
 
 public interface GenericDAOInterface<T,ID> {
@@ -8,4 +10,6 @@ public interface GenericDAOInterface<T,ID> {
     boolean save(T entity);
     boolean update(T entity);
     boolean delete(T entity);
+    String getEntityClassName();
+    EntityManager getEntityManager();
 }

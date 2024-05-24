@@ -1,4 +1,49 @@
+import DAOLayer.GenericDAO;
+import DAOLayer.Product.AccessoryDAO;
+import Entities.Product.Accessory;
+import Entities.Product.Instrumentproduct;
+import Entities.Product.Pickup;
+import Entities.User.User;
+import ServiceLayer.Product.AccessoryService;
+import ServiceLayer.TransactionService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
+
+public class AppShowcase {
+    public static void main(String[] args) {
+        // Create EntityManagerFactory
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("music-store-default");
+        EntityManager em = emf.createEntityManager();
+
+//        GenericDAO<Instrumentproduct, Integer> instrumentDAO = new GenericDAO<>(Instrumentproduct.class, em);
+//        var instrument = instrumentDAO.findById(1);
+//        System.out.println(instrument);
+
+//        GenericDAO<User, Integer> userDAO = new GenericDAO<>(User.class, em);
+//        var user = userDAO.findById(1);
+//        System.out.println(user);
+
+
+        TransactionService transactionService = new TransactionService(
+                new GenericDAO<>(Entities.User.Customeruser.class, em),
+                new GenericDAO<>(Entities.Product.Product.class, em),
+                new GenericDAO<>(Entities.Product.Buy.class, em)
+        );
+
+        transactionService.executeTransaction(11, 7);
+
+
+        em.close();
+        emf.close();
+
+//        System.out.println("Accessory assigned to instrument: " + success);
+//        System.out.println("Accessory assigned to instrument: " + success2);
+    }
+}
 package DAOLayer;
+
+import jakarta.persistence.EntityManager;
 
 import java.util.List;
 
@@ -8,6 +53,8 @@ public interface GenericDAOInterface<T,ID> {
     boolean save(T entity);
     boolean update(T entity);
     boolean delete(T entity);
+    String getEntityClassName();
+    EntityManager getEntityManager();
 }
 package DAOLayer;
 
@@ -82,6 +129,50 @@ public class GenericDAO<T,ID> implements GenericDAOInterface<T,ID>{
         return result;
     }
 
+    @Override
+    public String getEntityClassName() {
+        return entityClass.getSimpleName();
+    }
+
+    public EntityManager getEntityManager() {
+        return entityManager;
+    }
+}
+package DAOLayer.Product;
+
+import DAOLayer.GenericDAO;
+import Entities.Product.Accessory;
+import jakarta.persistence.EntityManager;
+
+public class AccessoryDAO extends GenericDAO<Accessory, Integer> {
+    public AccessoryDAO(Class<Accessory> entityClass, EntityManager entityManager) {
+        super(entityClass, entityManager);
+
+
+    }
+
+    public boolean assignAccessoryToProduct(int accessoryID, int instrumentID) {
+        boolean result;
+        try {
+            entityManager.getTransaction().begin();
+            entityManager.createQuery("SELECT assign_accessory_and_instrument(:accessoryID, :instrumentID)")
+                    .setParameter("accessoryID", accessoryID)
+                    .setParameter("instrumentID", instrumentID)
+                    .getSingleResult();
+            entityManager.getTransaction().commit();
+            result = true;
+        } catch (Exception e) {
+            entityManager.getTransaction().rollback();
+            result = false;
+            System.err.println("--------------------");
+            System.err.println("Failed to assign accessory:" + accessoryID +
+                    " to product: " + instrumentID +
+                    "
+"  + e.getMessage());
+        }
+
+        return result;
+    }
 }
 package Entities.Product;
 
@@ -346,6 +437,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "instrumentproduct")
+@PrimaryKeyJoinColumn(name = "productid")
 public class Instrumentproduct {
     @Id
     @Column(name = "productid", nullable = false)
@@ -395,6 +487,15 @@ public class Instrumentproduct {
         this.type = type;
     }
 
+    @Override
+    public String toString() {
+        return "Instrumentproduct{" +
+                "id=" + id +
+                ", product=" + product +
+                ", range='" + range + '\'' +
+                ", type='" + type + '\'' +
+                '}';
+    }
 }
 package Entities.Product;
 
@@ -404,6 +505,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "pasystemproduct")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Pasystemproduct {
     @Id
     @Column(name = "productid", nullable = false)
@@ -511,6 +613,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "product")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Product {
     @Id
     @ColumnDefault("nextval('product_productid_seq'::regclass)")
@@ -616,6 +719,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "customeruser")
+@PrimaryKeyJoinColumn(name = "userid")
 public class Customeruser {
     @Id
     @Column(name = "userid", nullable = false)
@@ -832,14 +936,12 @@ public class Superiority {
 }
 package Entities.User;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Table(name = "users")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class User {
     @Id
     @ColumnDefault("nextval('users_userid_seq'::regclass)")
@@ -876,6 +978,14 @@ public class User {
         this.email = email;
     }
 
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", nickname='" + nickname + '\'' +
+                ", email='" + email + '\'' +
+                '}';
+    }
 }
 package Entities.User;
 
@@ -885,6 +995,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "workeruser")
+@PrimaryKeyJoinColumn(name = "userid")
 public class Workeruser {
     @Id
     @Column(name = "userid", nullable = false)
@@ -934,5 +1045,193 @@ public class Workeruser {
         this.location = location;
     }
 
+    @Override
+    public String toString() {
+        return "Workeruser{" +
+                "id=" + id +
+                ", users=" + users +
+                ", personalidentificationnumber='" + personalidentificationnumber + '\'' +
+                ", location='" + location + '\'' +
+                '}';
+    }
 }
+package ServiceLayer;
+
+import java.util.Optional;
+
+public interface GenericServiceInterface<T,ID> {
+    Optional<T> findById(ID id);
+    boolean save(T entity);
+    boolean update(T entity);
+    boolean delete(T entity);
+}
+package ServiceLayer;
+
+import DAOLayer.GenericDAOInterface;
+
+import java.util.Optional;
+
+public class GenericService<T,ID> implements GenericServiceInterface<T,ID>{
+    protected final GenericDAOInterface<T,ID> dao;
+
+    public GenericService(GenericDAOInterface<T, ID> dao) {
+        this.dao = dao;
+    }
+
+    @Override
+    public Optional<T> findById(ID id) {
+        Optional<T> entity = Optional.ofNullable(dao.findById(id));
+        if (entity.isEmpty()){
+            System.err.println("Entity not found with id: " + id
+                    + "
+in table: " + dao.getEntityClassName()
+                    + "
+(try checking all of the ids in the table)");
+        }
+
+        return entity;
+    }
+
+    @Override
+    public boolean save(T entity) {
+        boolean isActionSuccessful = dao.save(entity);
+        if (!isActionSuccessful){
+            System.err.println("Error saving entity: " + entity.toString());
+        }
+        return isActionSuccessful;
+    }
+
+    @Override
+    public boolean update(T entity) {
+        boolean isActionSuccessful = dao.update(entity);
+        if (!isActionSuccessful){
+            System.err.println("Error updating entity: " + entity.toString());
+        }
+        return isActionSuccessful;
+    }
+
+    @Override
+    public boolean delete(T entity) {
+        boolean isActionSuccessful = dao.delete(entity);
+        if (!isActionSuccessful){
+            System.err.println("Error deleting entity: " + entity.toString());
+        }
+        return isActionSuccessful;
+    }
+
+    public GenericDAOInterface<T,ID> getDAO() {
+        return dao;
+    }
+}
+package ServiceLayer.Product;
+
+import DAOLayer.GenericDAOInterface;
+import DAOLayer.Product.AccessoryDAO;
+import Entities.Product.Accessory;
+import Entities.Product.Instrumentproduct;
+import ServiceLayer.GenericService;
+
+public class AccessoryService extends GenericService<Accessory, Integer> {
+    private AccessoryDAO accessoryDAO = null;
+
+    public AccessoryService(GenericDAOInterface<Accessory, Integer> dao) {
+        super(dao);
+        if (!(dao instanceof AccessoryDAO))
+            throw new IllegalArgumentException("AccessoryService should be constructed with a AccessoryDAO");
+        else {
+            this.accessoryDAO = (AccessoryDAO) dao;
+        }
+    }
+
+    public boolean assignAccessoryToInstrument(Accessory accessory, Instrumentproduct instrument) {
+        return accessoryDAO.assignAccessoryToProduct(accessory.getId() , instrument.getId());
+    }
+}
+package ServiceLayer;
+
+import DAOLayer.GenericDAO;
+import DAOLayer.GenericDAOInterface;
+import Entities.Product.Buy;
+import Entities.Product.Product;
+import Entities.User.Customeruser;
+import jakarta.persistence.EntityTransaction;
+
+public class TransactionService{
+    GenericDAOInterface<Customeruser, Integer> customerDAO = null;
+    GenericDAOInterface<Product, Integer> productDAO = null;
+    GenericDAOInterface<Buy, Integer> buyDAO = null;
+
+    public TransactionService(GenericDAOInterface<Customeruser, Integer> customerDAO,
+                              GenericDAOInterface<Product, Integer> productDAO,
+                              GenericDAOInterface<Buy, Integer> buyDAO) {
+
+        this.customerDAO = (GenericDAO<Customeruser, Integer>) customerDAO;
+        this.productDAO = (GenericDAO<Product, Integer>) productDAO;
+        this.buyDAO = (GenericDAO<Buy, Integer>) buyDAO;
+    }
+
+    public boolean executeTransaction(int customerId, int productId) {
+        boolean result = false;
+
+        EntityTransaction transaction = customerDAO.getEntityManager().getTransaction();
+
+        try {
+            transaction.begin();
+
+//            Getting customer
+            Customeruser customer = customerDAO.findById(customerId);
+            if (customer == null) {
+                throw new Exception("Customer not found");
+            }
+
+//            Getting product
+            Product product = productDAO.findById(productId);
+            if (product == null) {
+                throw new Exception("Product not found");
+            }
+
+//            Creating buy and inserting into database
+            Buy buy = new Buy();
+            buy.setCustomerid(customer);
+            buy.setProductid(product);
+            buyDAO.save(buy);
+
+//            update customer premium status to true
+            customer.setPremiumstatus(true);
+            customerDAO.update(customer);
+
+            transaction.commit();
+            result = true;
+
+        } catch (Exception e) {
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+        }
+
+        return result;
+    }
+}
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+    <persistence-unit name="music-store-default">
+        <properties>
+            <property name="hibernate.connection.url" value="jdbc:postgresql://slon.felk.cvut.cz:5432/saframa9"/>
+            <property name="hibernate.connection.driver_class" value="org.postgresql.Driver"/>
+            <property name="hibernate.connection.username" value="saframa9"/>
+            <property name="hibernate.connection.password" value="MultiDBS"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+
+<!--            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>-->
+<!--            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://slon.felk.cvut.cz:5432/saframa9"/>-->
+<!--            <property name="jakarta.persistence.jdbc.user" value="saframa9"/>-->
+<!--            <property name="jakarta.persistence.jdbc.password" value="MultiDBS"/>-->
+        </properties>
+
+
+    </persistence-unit>
+</persistence>
 

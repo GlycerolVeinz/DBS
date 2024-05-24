@@ -56,4 +56,13 @@ public class Instrumentproduct {
         this.type = type;
     }
 
+    @Override
+    public String toString() {
+        return "Instrumentproduct{" +
+                "id=" + id +
+                ", product=" + product +
+                ", range='" + range + '\'' +
+                ", type='" + type + '\'' +
+                '}';
+    }
 }

@@ -56,4 +56,13 @@ public class Workeruser {
         this.location = location;
     }
 
+    @Override
+    public String toString() {
+        return "Workeruser{" +
+                "id=" + id +
+                ", users=" + users +
+                ", personalidentificationnumber='" + personalidentificationnumber + '\'' +
+                ", location='" + location + '\'' +
+                '}';
+    }
 }
