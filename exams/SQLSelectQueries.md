@@ -360,11 +360,77 @@ I do not know how to do that, lets learn:
 
 5. Find the top 5 users who have spent the most money on the marketplace, along with the total amount they have spent.
 
+5.
+SELECT *, SUM(o.TotalAmount)
+FROM User u
+JOIN Order o ON u.UserID = o.UserID
+GROUP BY u.UserID
+ORDER BY SUM(o.TotalAmount) DESC
+LIMIT 5;
+
+
+
 6. List the products (ProductID, ProductName) that are currently out of stock but have been ordered at least 10 times.
+
+6.
+SELECT p.ProductID, p.ProductName
+FROM Product p
+JOIN OrderItem oi ON p.ProductID = oi.ProductID
+WHERE p.Quantity = 0 OR p.Quantity IS NULL
+GROUP BY p.ProductID, p.ProductName
+HAVING SUM(oi.Quantity) >= 10;
+
+
 
 7. Find the average rating for each product category, including subcategories, and list the categories with an average rating below 3.5.
 
+7.
+WITH RECURSIVE CategoriesHierarchy AS ch(
+	SELECT *
+	FROM Category
+	WHERE ParentCategoryID IS NULL
+
+	UNION ALL
+
+	SELECT *
+	FROM Category c
+	WHERE ch.CategoryID = c.ParentCategoryID)
+SELECT ch.CategoryName, AVG(r.Rating)
+FROM CategoryHierarchy ch
+JOIN Product p ON p.Category = ch.CategoryID
+JOIN Review r ON r.ProductID = p.ProfessorID
+GROUP BY ch,CategoryName
+HAVING AVG(r.Rating) < 3.5;  
+
+7. Corrected:
+WITH RECURSIVE CategoryHierarchy AS (
+    SELECT *
+    FROM Category
+    WHERE ParentCategoryID IS NULL
+
+    UNION ALL
+
+    SELECT *
+    FROM Category c
+    JOIN CategoryHierarchy ch ON c.ParentCategoryID = ch.CategoryID
+)
+SELECT ch.CategoryName, AVG(r.Rating)
+FROM CategoryHierarchy ch
+JOIN Product p ON ch.CategoryID = p.Category
+JOIN Review r ON p.ProductID = r.ProductID
+GROUP BY ch.CategoryID, ch.CategoryName
+HAVING AVG(r.Rating) < 3.5;
+
+
+7. Problems:
+	- When doing recursive union use JOIN, so that you flatten result
+	- Do not give an alias to recursive definition, the definition is the alias
+	- Joining more tables is possible, use more JOIN clauses
+
 8. Identify the users who have never placed an order but have written reviews.
+
+8.
+
 
 9. List the most frequently ordered product for each month of the current year.
 
